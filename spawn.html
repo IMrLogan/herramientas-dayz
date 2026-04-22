@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visualizador Concesionario DayZ - 6 Autos</title>
+    <style>
+        :root {
+            --bg-color: #1a1a2e;
+            --panel-bg: #16213e;
+            --text-color: #e94560;
+            --text-light: #fff;
+            --safe: #4CAF50;
+            --danger: #f44336;
+            --grid: #0f3460;
+            --code-bg: #0b0c10;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-light);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        h1 { color: var(--text-color); margin-top: 0; text-align: center;}
+        .container {
+            display: flex;
+            gap: 20px;
+            max-width: 1400px;
+            width: 100%;
+            align-items: flex-start;
+        }
+        .controls {
+            background-color: var(--panel-bg);
+            padding: 20px;
+            border-radius: 8px;
+            flex: 1;
+            max-width: 450px;
+            height: 85vh;
+            overflow-y: auto;
+        }
+        .row-title {
+            color: #a6e22e;
+            border-bottom: 1px solid #a6e22e;
+            padding-bottom: 5px;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+        .point-group {
+            background-color: rgba(0,0,0,0.2);
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            border-left: 4px solid var(--text-color);
+        }
+        .input-row {
+            display: flex;
+            gap: 10px;
+            margin-top: 5px;
+            align-items: center;
+        }
+        label { font-size: 14px; font-weight: bold; width: 60px; display: inline-block;}
+        input[type="number"] {
+            width: 80px;
+            padding: 5px;
+            background: #fff;
+            border: none;
+            border-radius: 3px;
+            font-weight: bold;
+            color: #333;
+        }
+        .hint { font-size: 12px; color: #aaa; margin-top: 15px; margin-bottom: 10px; }
+        
+        /* Estilos de la Brújula */
+        .compass-box {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-top: 15px;
+            background-color: var(--code-bg);
+            padding: 15px;
+            border-radius: 6px;
+            border: 1px solid var(--grid);
+        }
+        .compass {
+            width: 70px;
+            height: 70px;
+            border: 2px solid var(--grid);
+            border-radius: 50%;
+            position: relative;
+            background: radial-gradient(circle, #16213e 0%, #0b0c10 100%);
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.8);
+        }
+        .dir { position: absolute; font-size: 11px; font-weight: bold; color: #666; }
+        .dir-n { top: 4px; left: 50%; transform: translateX(-50%); color: var(--text-color); }
+        .dir-s { bottom: 4px; left: 50%; transform: translateX(-50%); }
+        .dir-e { top: 50%; right: 6px; transform: translateY(-50%); }
+        .dir-w { top: 50%; left: 6px; transform: translateY(-50%); }
+        .compass-arrow {
+            position: absolute;
+            top: 12px; bottom: 12px; left: 50%;
+            width: 2px;
+            background: rgba(255,255,255,0.1);
+            transform-origin: center;
+            transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+        }
+        .compass-arrow::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -5px;
+            border-left: 6px solid transparent;
+            border-right: 6px solid transparent;
+            border-bottom: 12px solid var(--text-color);
+        }
+        .compass-guide {
+            font-size: 13px;
+            color: #aaa;
+            line-height: 1.5;
+        }
+        .compass-guide span { color: #fff; font-weight: bold; }
+
+        .event-example {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: rgba(0,0,0,0.3);
+            border-radius: 6px;
+            border: 1px solid var(--grid);
+        }
+        .event-example h3 { margin-top: 0; font-size: 15px; color: var(--text-color); }
+        .event-example pre { margin: 0; font-size: 11px; white-space: pre-wrap; color: #a6e22e; }
+
+        .canvas-container {
+            flex: 2;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        canvas {
+            background-color: var(--code-bg);
+            border: 2px solid var(--grid);
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.5);
+            width: 100%;
+            height: 550px;
+        }
+        .results {
+            background-color: var(--panel-bg);
+            padding: 20px;
+            border-radius: 8px;
+        }
+        .status-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .distance-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 13px;
+        }
+        pre {
+            background-color: var(--code-bg);
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            color: #4CAF50;
+            font-family: 'Courier New', Courier, monospace;
+            max-height: 200px;
+        }
+        
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg-color); }
+        ::-webkit-scrollbar-thumb { background: var(--grid); border-radius: 4px; }
+    </style>
+</head>
+<body>
+
+    <h1>Visualizador de Spawns</h1>
+    
+    <div class="container">
+        <div class="controls">
+            <div class="point-group">
+                <label style="width: auto;">Ángulo Global (a):</label>
+                <input type="number" id="angle" value="90" oninput="updateAll()"> grados
+                
+                <div class="compass-box">
+                    <div class="compass">
+                        <div class="dir dir-n">N</div>
+                        <div class="dir dir-e">E</div>
+                        <div class="dir dir-s">S</div>
+                        <div class="dir dir-w">W</div>
+                        <div class="compass-arrow" id="compassArrow"></div>
+                    </div>
+                    <div class="compass-guide">
+                        <span>0° / 360°</span> = Norte<br>
+                        <span>90°</span> = Este<br>
+                        <span>180°</span> = Sur<br>
+                        <span>270°</span> = Oeste
+                    </div>
+                </div>
+            </div>
+
+            <h3 class="row-title">Fila 1 (Trasera)</h3>
+            <div class="point-group">
+                <label>Auto 1</label>
+                <div class="input-row">
+                    X: <input type="number" id="p1x" value="5000.0" step="0.1" oninput="updateAll()">
+                    Z: <input type="number" id="p1z" value="5000.0" step="0.1" oninput="updateAll()">
+                </div>
+            </div>
+            <div class="point-group">
+                <label>Auto 2</label>
+                <div class="input-row">
+                    X: <input type="number" id="p2x" value="5006.0" step="0.1" oninput="updateAll()">
+                    Z: <input type="number" id="p2z" value="5000.0" step="0.1" oninput="updateAll()">
+                </div>
+            </div>
+            <div class="point-group">
+                <label>Auto 3</label>
+                <div class="input-row">
+                    X: <input type="number" id="p3x" value="5012.0" step="0.1" oninput="updateAll()">
+                    Z: <input type="number" id="p3z" value="5000.0" step="0.1" oninput="updateAll()">
+                </div>
+            </div>
+
+            <h3 class="row-title">Fila 2 (Delantera)</h3>
+            <div class="point-group">
+                <label>Auto 4</label>
+                <div class="input-row">
+                    X: <input type="number" id="p4x" value="5000.0" step="0.1" oninput="updateAll()">
+                    Z: <input type="number" id="p4z" value="4990.0" step="0.1" oninput="updateAll()">
+                </div>
+            </div>
+            <div class="point-group">
+                <label>Auto 5</label>
+                <div class="input-row">
+                    X: <input type="number" id="p5x" value="5006.0" step="0.1" oninput="updateAll()">
+                    Z: <input type="number" id="p5z" value="4990.0" step="0.1" oninput="updateAll()">
+                </div>
+            </div>
+            <div class="point-group">
+                <label>Auto 6</label>
+                <div class="input-row">
+                    X: <input type="number" id="p6x" value="5012.0" step="0.1" oninput="updateAll()">
+                    Z: <input type="number" id="p6z" value="4990.0" step="0.1" oninput="updateAll()">
+                </div>
+            </div>
+            
+            <p class="hint">* Escala visual: Un cuadro de la cuadrícula = 1 metro.</p>
+
+            <div class="event-example">
+                <h3>Plantilla para events.xml (6 Autos)</h3>
+<pre>&lt;event name="VehicleConcesionario"&gt;
+    &lt;nominal&gt;6&lt;/nominal&gt;
+    &lt;min&gt;5&lt;/min&gt;
+    &lt;max&gt;6&lt;/max&gt;
+    &lt;lifetime&gt;300&lt;/lifetime&gt;
+    &lt;restock&gt;0&lt;/restock&gt;
+    &lt;saferadius&gt;40&lt;/saferadius&gt;
+    &lt;distanceradius&gt;5&lt;/distanceradius&gt;
+    &lt;cleanupradius&gt;100&lt;/cleanupradius&gt;
+    &lt;flags deletable="0" init_random="0" remove_damaged="1"/&gt;
+    &lt;position&gt;fixed&lt;/position&gt;
+    &lt;limit&gt;mixed&lt;/limit&gt;
+    &lt;active&gt;1&lt;/active&gt;
+    &lt;children&gt;
+        &lt;child lootmax="0" lootmin="0" max="6" min="2" type="Hatchback_02"/&gt;
+    &lt;/children&gt;
+&lt;/event&gt;</pre>
+            </div>
+        </div>
+
+        <div class="canvas-container">
+            <canvas id="mapCanvas" width="850" height="550"></canvas>
+            
+            <div class="results">
+                <h3>Análisis de Distancias de Seguridad</h3>
+                <div id="distanceStatus"></div>
+                
+                <h3>Código para cfgeventspawns.xml</h3>
+                <pre id="xmlOutput"></pre>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('mapCanvas');
+        const ctx = canvas.getContext('2d');
+        const PIXELS_PER_METER = 22; 
+        const CAR_WIDTH = 2; 
+        const CAR_LENGTH = 5; 
+
+        function getVal(id) { return parseFloat(document.getElementById(id).value) || 0; }
+
+        function updateAll() {
+            const angle = getVal('angle');
+            const points = [
+                { id: 1, x: getVal('p1x'), z: getVal('p1z') },
+                { id: 2, x: getVal('p2x'), z: getVal('p2z') },
+                { id: 3, x: getVal('p3x'), z: getVal('p3z') },
+                { id: 4, x: getVal('p4x'), z: getVal('p4z') },
+                { id: 5, x: getVal('p5x'), z: getVal('p5z') },
+                { id: 6, x: getVal('p6x'), z: getVal('p6z') }
+            ];
+
+            // Animar Brújula
+            document.getElementById('compassArrow').style.transform = `translateX(-50%) rotate(${angle}deg)`;
+
+            // Distancias Laterales
+            const d1_2 = Math.hypot(points[1].x - points[0].x, points[1].z - points[0].z);
+            const d2_3 = Math.hypot(points[2].x - points[1].x, points[2].z - points[1].z);
+            const d4_5 = Math.hypot(points[4].x - points[3].x, points[4].z - points[3].z);
+            const d5_6 = Math.hypot(points[5].x - points[4].x, points[5].z - points[4].z);
+            // Distancias Frontales
+            const d1_4 = Math.hypot(points[3].x - points[0].x, points[3].z - points[0].z);
+            const d2_5 = Math.hypot(points[4].x - points[1].x, points[4].z - points[1].z);
+            const d3_6 = Math.hypot(points[5].x - points[2].x, points[5].z - points[2].z);
+
+            const dists = { d1_2, d2_3, d4_5, d5_6, d1_4, d2_5, d3_6 };
+
+            updateUI(dists, points, angle);
+            drawCanvas(points, angle);
+        }
+
+        function drawCanvas(points, angle) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            ctx.strokeStyle = 'rgba(15, 52, 96, 0.4)';
+            ctx.lineWidth = 1;
+            for(let i = 0; i < canvas.width; i += PIXELS_PER_METER) {
+                ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, canvas.height); ctx.stroke();
+            }
+            for(let i = 0; i < canvas.height; i += PIXELS_PER_METER) {
+                ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(canvas.width, i); ctx.stroke();
+            }
+
+            let sumX = 0, sumZ = 0;
+            points.forEach(p => { sumX += p.x; sumZ += p.z; });
+            const centerX = sumX / 6;
+            const centerZ = sumZ / 6;
+
+            const toCanvas = (x, z) => ({
+                cx: canvas.width / 2 + (x - centerX) * PIXELS_PER_METER,
+                cy: canvas.height / 2 - (z - centerZ) * PIXELS_PER_METER 
+            });
+
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+            ctx.setLineDash([4, 4]);
+            ctx.beginPath();
+            
+            let c1 = toCanvas(points[0].x, points[0].z);
+            let c2 = toCanvas(points[1].x, points[1].z);
+            let c3 = toCanvas(points[2].x, points[2].z);
+            ctx.moveTo(c1.cx, c1.cy); ctx.lineTo(c2.cx, c2.cy); ctx.lineTo(c3.cx, c3.cy);
+            
+            let c4 = toCanvas(points[3].x, points[3].z);
+            let c5 = toCanvas(points[4].x, points[4].z);
+            let c6 = toCanvas(points[5].x, points[5].z);
+            ctx.moveTo(c4.cx, c4.cy); ctx.lineTo(c5.cx, c5.cy); ctx.lineTo(c6.cx, c6.cy);
+
+            ctx.moveTo(c1.cx, c1.cy); ctx.lineTo(c4.cx, c4.cy);
+            ctx.moveTo(c2.cx, c2.cy); ctx.lineTo(c5.cx, c5.cy);
+            ctx.moveTo(c3.cx, c3.cy); ctx.lineTo(c6.cx, c6.cy);
+            
+            ctx.stroke();
+            ctx.setLineDash([]); 
+
+            points.forEach((p, index) => {
+                const pos = toCanvas(p.x, p.z);
+                
+                ctx.save();
+                ctx.translate(pos.cx, pos.cy);
+                const rad = (angle - 90) * Math.PI / 180; 
+                ctx.rotate(rad);
+
+                ctx.fillStyle = index < 3 ? '#e94560' : '#4fa8c7'; 
+                ctx.fillRect(- (CAR_LENGTH * PIXELS_PER_METER) / 2, - (CAR_WIDTH * PIXELS_PER_METER) / 2, CAR_LENGTH * PIXELS_PER_METER, CAR_WIDTH * PIXELS_PER_METER);
+                
+                ctx.fillStyle = '#fff';
+                ctx.fillRect((CAR_LENGTH * PIXELS_PER_METER) / 2 - 8, - (CAR_WIDTH * PIXELS_PER_METER) / 2, 8, CAR_WIDTH * PIXELS_PER_METER);
+
+                ctx.restore();
+
+                ctx.fillStyle = '#fff';
+                ctx.font = 'bold 14px Arial';
+                ctx.fillText(`A${p.id}`, pos.cx - 10, pos.cy - 20);
+            });
+        }
+
+        function updateUI(dists, points, angle) {
+            const statusDiv = document.getElementById('distanceStatus');
+            const formatDist = (d) => `<span class="distance-badge" style="background-color: ${d < 4.5 ? 'var(--danger)' : 'var(--safe)'}; color: #fff;">${d.toFixed(1)}m</span>`;
+            
+            let danger = Object.values(dists).some(d => d < 4.5);
+
+            statusDiv.innerHTML = `
+                <div class="status-grid">
+                    <div>Fila 1 (Lado a Lado): Auto 1-2: ${formatDist(dists.d1_2)} | Auto 2-3: ${formatDist(dists.d2_3)}</div>
+                    <div>Fila 2 (Lado a Lado): Auto 4-5: ${formatDist(dists.d4_5)} | Auto 5-6: ${formatDist(dists.d5_6)}</div>
+                    <div>Atrás hacia Adelante: Auto 1-4: ${formatDist(dists.d1_4)} | Auto 2-5: ${formatDist(dists.d2_5)}</div>
+                    <div>Atrás hacia Adelante: Auto 3-6: ${formatDist(dists.d3_6)}</div>
+                </div>
+                ${danger ? '<div style="color:var(--danger); font-weight:bold;">⚠️ Peligro: Detectamos distancias menores a 4.5m. Espacia más los autos.</div>' : '<div style="color:var(--safe); font-weight:bold;">✅ Estacionamiento seguro. Distancias correctas.</div>'}
+            `;
+
+            let xml = `\n`;
+            points.forEach(p => {
+                xml += `<pos x="${p.x.toFixed(6)}" z="${p.z.toFixed(6)}" a="${angle.toFixed(6)}" />\n`;
+            });
+            document.getElementById('xmlOutput').textContent = xml;
+        }
+
+        updateAll();
+    </script>
+</body>
+</html>

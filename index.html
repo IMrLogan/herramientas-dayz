@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DayZ Spawn Gear Presets V8 (Engine Fix)</title>
+    <style>
+        :root {
+            --bg-dark: #121212; --bg-panel: #1e1e1e; --bg-slot: #2b2b2b;
+            --primary: #4caf50; --primary-hover: #45a049; --secondary: #2196F3;
+            --warning: #ff9800; --danger: #f44336;
+            --text-light: #ffffff; --text-muted: #aaaaaa; --border: #333333;
+        }
+
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg-dark); color: var(--text-light); margin: 0; padding: 0; display: flex; flex-direction: column; height: 100vh; }
+        header { background-color: var(--bg-panel); padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); box-shadow: 0 4px 6px rgba(0,0,0,0.3); z-index: 10;}
+        header h1 { margin: 0; font-size: 22px; color: var(--primary); text-transform: uppercase; letter-spacing: 1px; }
+        .controls { display: flex; gap: 15px; }
+        button, .file-upload-label { background-color: var(--primary); color: white; border: none; padding: 10px 20px; cursor: pointer; border-radius: 5px; font-weight: bold; font-size: 14px; transition: background 0.3s; display: inline-block; }
+        button:hover, .file-upload-label:hover { background-color: var(--primary-hover); }
+        .file-upload-label { background-color: var(--secondary); }
+        .file-upload-label:hover { background-color: #1976D2; }
+        input[type="file"] { display: none; }
+        main { display: flex; flex: 1; overflow: hidden; padding: 20px; gap: 15px; }
+        .column { background-color: var(--bg-panel); border: 1px solid var(--border); border-radius: 8px; padding: 15px; display: flex; flex-direction: column; overflow-y: auto; }
+        
+        .col-survivors { flex: 0.6; min-width: 160px; }
+        .col-equip { flex: 1.3; min-width: 320px; }
+        .col-cargo { flex: 1.5; min-width: 380px; }
+        .col-preview { flex: 1.4; min-width: 320px; }
+        
+        h2 { font-size: 16px; margin-top: 0; border-bottom: 1px solid var(--border); padding-bottom: 10px; color: var(--primary); text-transform: uppercase; }
+
+        .survivor-controls { margin-bottom: 10px; display: flex; gap: 5px;}
+        .survivor-controls button { padding: 5px 10px; font-size: 12px; }
+        .survivor-list { display: flex; flex-direction: column; gap: 5px; font-size: 13px;}
+        .survivor-list label { display: flex; align-items: center; gap: 8px; cursor: pointer;}
+
+        .equip-card { background: var(--bg-dark); border: 1px solid var(--border); border-radius: 6px; margin-bottom: 10px; padding: 8px;}
+        .slot-group { display: flex; align-items: center; gap: 10px; }
+        .slot-label { width: 65px; font-size: 11px; color: var(--text-muted); text-align: right; font-weight: bold; text-transform: uppercase;}
+        .item-thumb { width: 35px; height: 35px; background-color: #222; border-radius: 4px; object-fit: contain; border: 1px solid #444;}
+        .slot-input-wrapper { flex: 1; }
+        .slot-input-wrapper input, select { width: 100%; padding: 8px; background-color: var(--bg-slot); border: 1px solid var(--border); color: white; border-radius: 4px; box-sizing: border-box; }
+        .slot-input-wrapper input:focus, select:focus { outline: none; border-color: var(--primary); }
+
+        .equip-attachments-container { margin-left: 110px; margin-top: 5px;}
+        
+        .cargo-input-container { display: flex; gap: 8px; margin-bottom: 15px; }
+        .cargo-input-container input { flex: 1.5; padding: 8px; background-color: var(--bg-slot); border: 1px solid var(--border); color: white; border-radius: 4px; }
+        .cargo-input-container select { flex: 1; padding: 8px; background-color: var(--bg-slot); border: 1px solid var(--border); color: white; border-radius: 4px; }
+        .cargo-input-container button { padding: 8px 15px; }
+
+        #cargo-list { list-style: none; padding: 0; margin: 0; }
+        .cargo-item { background-color: var(--bg-slot); padding: 10px; margin-bottom: 10px; border-radius: 4px; border-left: 3px solid var(--primary); display: flex; flex-direction: column; gap: 5px;}
+        
+        .dest-cargo { border-left-color: var(--primary); }
+        .dest-shoulderL { border-left-color: var(--warning); }
+        .dest-shoulderR { border-left-color: var(--secondary); }
+        .dest-hands { border-left-color: #9c27b0; }
+        
+        .cargo-header-wrapper { display: flex; align-items: center; gap: 10px; }
+        .cargo-header-info { flex: 1; display: flex; justify-content: space-between; align-items: center; }
+        .cargo-title { font-weight: bold; display: flex; align-items: center; gap: 10px;}
+        
+        .badge { font-size: 10px; padding: 3px 6px; border-radius: 10px; background: #444; text-transform: uppercase; }
+        .badge-cargo { background-color: rgba(76, 175, 80, 0.2); color: #81c784; }
+        .badge-shoulder { background-color: rgba(255, 152, 0, 0.2); color: #ffb74d; }
+        .badge-hands { background-color: rgba(156, 39, 176, 0.2); color: #ce93d8; }
+        
+        .btn-small { padding: 4px 8px; font-size: 11px; margin-left: 5px; cursor: pointer; border: none; border-radius: 3px; color: white;}
+        .btn-danger { background-color: var(--danger); }
+        .btn-danger:hover { background-color: #d32f2f; }
+        .btn-add { background-color: #555; }
+        .btn-add:hover { background-color: var(--primary); }
+        
+        .attachments-list { margin-top: 5px; padding-left: 5px; border-top: 1px dashed var(--border); padding-top: 5px;}
+        .attachment-item { display: flex; align-items: center; gap: 10px; background-color: #222; padding: 5px; margin-bottom: 3px; border-radius: 3px; font-size: 12px;}
+        .att-thumb { width: 25px; height: 25px; object-fit: contain; background: #111; border-radius: 3px;}
+        
+        .add-attachment-ui { display: flex; gap: 5px; margin-top: 5px; }
+        .add-attachment-ui input { flex: 1; padding: 5px; font-size: 12px; background-color: #1a1a1a; border: 1px solid var(--border); color: white; border-radius: 3px;}
+
+        #json-preview { background-color: var(--bg-dark); padding: 15px; border-radius: 5px; border: 1px solid var(--border); color: #a6e22e; font-family: 'Courier New', Courier, monospace; font-size: 12px; overflow-y: auto; flex: 1; white-space: pre-wrap; margin: 0; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: var(--bg-dark); }
+        ::-webkit-scrollbar-thumb { background: #555; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--primary); }
+        .db-status { font-size: 12px; color: var(--text-muted); margin-left: 15px; }
+        .db-status span { color: var(--danger); font-weight: bold;}
+        .db-status.loaded span { color: var(--primary); }
+        
+        .img-config { display: flex; align-items: center; gap: 10px; font-size: 12px; margin-top: 5px; color: var(--text-muted);}
+        .img-config input { padding: 4px; background: #222; border: 1px solid #444; color: white; border-radius: 3px; width: 150px;}
+
+    </style>
+</head>
+<body>
+
+    <div id="datalists-container">
+        <datalist id="all-items"></datalist>
+        <datalist id="list-Headgear"></datalist><datalist id="list-Mask"></datalist><datalist id="list-Eyewear"></datalist>
+        <datalist id="list-Body"></datalist><datalist id="list-Vest"></datalist><datalist id="list-Gloves"></datalist>
+        <datalist id="list-Back"></datalist><datalist id="list-Legs"></datalist><datalist id="list-Feet"></datalist>
+        <datalist id="list-Armband"></datalist><datalist id="list-Hips"></datalist>
+    </div>
+
+    <header>
+        <div>
+            <div style="display: flex; align-items: center;">
+                <h1>Spawn Gear Presets V8 <span style="font-size: 12px; color: var(--text-muted);">(Engine Fix)</span></h1>
+                <div id="db-indicator" class="db-status">Base de datos: <span>Vacía</span></div>
+            </div>
+            <div class="img-config">
+                Origen Imágenes: 
+                <input type="text" id="img-base-url" value="images/" title="Carpeta local o URL">
+            </div>
+        </div>
+        <div class="controls">
+            <label class="file-upload-label">
+                1. Cargar types.xml
+                <input type="file" id="file-input" accept=".xml">
+            </label>
+            <button id="export-btn">2. Descargar preset.json</button>
+        </div>
+    </header>
+
+    <main>
+        <div class="column col-survivors">
+            <h2>Sobrevivientes</h2>
+            <div class="survivor-controls">
+                <button onclick="toggleAllSurvivors(true)">Todos</button>
+                <button onclick="toggleAllSurvivors(false)" style="background:var(--bg-slot)">Ninguno</button>
+            </div>
+            <div id="survivor-container" class="survivor-list"></div>
+        </div>
+
+        <div class="column col-equip">
+            <h2>Ropa y Accesorios</h2>
+            <div id="equip-form"></div>
+        </div>
+
+        <div class="column col-cargo">
+            <h2>Armas e Inventario Libre</h2>
+            <div class="cargo-input-container">
+                <input type="text" id="new-cargo-item" list="all-items" placeholder="Ej: M4A1, Apple...">
+                <select id="new-cargo-dest">
+                    <option value="cargo">A Inventario (Cargo)</option>
+                    <option value="Hands">A las Manos</option>
+                    <option value="shoulderL">Al Hombro Izq (Arma 1)</option>
+                    <option value="shoulderR">Al Hombro Der (Arma 2)</option>
+                </select>
+                <button id="add-cargo-btn">Añadir</button>
+            </div>
+            <ul id="cargo-list"></ul>
+        </div>
+
+        <div class="column col-preview">
+            <h2>Vista Previa JSON Final</h2>
+            <pre id="json-preview"></pre>
+        </div>
+    </main>
+
+    <script>
+        function getImgUrl(itemName) {
+            if(!itemName) return 'https://placehold.co/40x40/2b2b2b/4caf50?text=?';
+            return `${document.getElementById('img-base-url').value}${itemName}.png`;
+        }
+        function getFallbackImg(itemName) {
+            return `https://placehold.co/40x40/222/555?text=${itemName ? itemName.charAt(0).toUpperCase() : '?'}`;
+        }
+
+        document.getElementById('img-base-url').addEventListener('change', () => { updateEquipImages(); renderCargo(); });
+
+        const categoryKeywords = {
+            Headgear: ['hat', 'helmet', 'cap', 'beanie', 'bandana', 'beret', 'ushanka', 'hood', 'head'],
+            Mask: ['mask', 'balaclava', 'respirator', 'beard'],
+            Eyewear: ['glasses', 'goggles', 'eyepatch', 'headtorch'],
+            Body: ['jacket', 'shirt', 'coat', 'hoodie', 'sweater', 'tshirt', 'raincoat', 'top', 'bdu'],
+            Vest: ['vest', 'platecarrier', 'chestrig', 'harness'],
+            Gloves: ['gloves'],
+            Back: ['bag', 'backpack', 'drybag', 'sack'],
+            Legs: ['pants', 'jeans', 'breeches', 'skirt', 'shorts', 'tracksuit', 'cargopants'],
+            Feet: ['shoes', 'boots', 'sneakers', 'wellies'],
+            Armband: ['armband'],
+            Hips: ['belt', 'fanny']
+        };
+
+        let itemsDB = [];
+        document.getElementById('file-input').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const parser = new DOMParser();
+                const types = parser.parseFromString(e.target.result, "application/xml").getElementsByTagName('type');
+                
+                document.getElementById('all-items').innerHTML = '';
+                Object.keys(categoryKeywords).forEach(key => document.getElementById('list-' + key).innerHTML = '');
+
+                itemsDB = [];
+                const fragments = { 'all': document.createDocumentFragment() };
+                Object.keys(categoryKeywords).forEach(key => fragments[key] = document.createDocumentFragment() );
+
+                for (let i = 0; i < types.length; i++) {
+                    const name = types[i].getAttribute('name');
+                    if(name) {
+                        itemsDB.push(name);
+                        const nameLower = name.toLowerCase();
+                        const optionAll = document.createElement('option'); optionAll.value = name;
+                        fragments['all'].appendChild(optionAll);
+
+                        for (const [slot, keywords] of Object.entries(categoryKeywords)) {
+                            if (keywords.some(kw => nameLower.includes(kw))) {
+                                const optionSlot = document.createElement('option'); optionSlot.value = name;
+                                fragments[slot].appendChild(optionSlot);
+                                break; 
+                            }
+                        }
+                    }
+                }
+                document.getElementById('all-items').appendChild(fragments['all']);
+                Object.keys(categoryKeywords).forEach(key => document.getElementById('list-' + key).appendChild(fragments[key]) );
+                document.getElementById('db-indicator').innerHTML = `Base de datos: <span style="color:var(--primary)">Cargada</span>`;
+            };
+            reader.readAsText(file);
+        });
+
+        const defaultCharacters = [
+            "SurvivorM_Mirek", "SurvivorM_Denis", "SurvivorM_Boris", "SurvivorM_Cyril", "SurvivorM_Elias", "SurvivorM_Francis", "SurvivorM_Guo", "SurvivorM_Hassan", 
+            "SurvivorM_Indar", "SurvivorM_Jose", "SurvivorM_Kaito", "SurvivorM_Lewis", "SurvivorM_Manua", "SurvivorM_Niki", "SurvivorM_Oliver", "SurvivorM_Peter", 
+            "SurvivorM_Quinn", "SurvivorM_Rolf", "SurvivorM_Seth", "SurvivorM_Taiki", "SurvivorF_Linda", "SurvivorF_Maria", "SurvivorF_Frida", "SurvivorF_Gabi", 
+            "SurvivorF_Helga", "SurvivorF_Irena", "SurvivorF_Judy", "SurvivorF_Keiko", "SurvivorF_Eva", "SurvivorF_Naomi", "SurvivorF_Baty"
+        ];
+        
+        const survivorContainer = document.getElementById('survivor-container');
+        defaultCharacters.forEach(char => {
+            const label = document.createElement('label');
+            label.innerHTML = `<input type="checkbox" class="surv-cb" value="${char}" checked onchange="updateJson()"> ${char.replace('Survivor', '')}`;
+            survivorContainer.appendChild(label);
+        });
+
+        window.toggleAllSurvivors = function(state) {
+            document.querySelectorAll('.surv-cb').forEach(cb => cb.checked = state);
+            updateJson();
+        }
+
+        const equipSlots = [
+            { id: 'Headgear', label: 'Cabeza', def: 'BaseballCap_Black' },
+            { id: 'Mask', label: 'Máscara', def: '' },
+            { id: 'Eyewear', label: 'Gafas', def: '' },
+            { id: 'Body', label: 'Torso', def: 'TShirt_Black' },
+            { id: 'Vest', label: 'Chaleco', def: '' },
+            { id: 'Back', label: 'Mochila', def: 'DryBag_Black' },
+            { id: 'Hips', label: 'Cinturón', def: '' },
+            { id: 'Armband', label: 'Brazalete', def: 'Armband_Blue' },
+            { id: 'Gloves', label: 'Guantes', def: '' },
+            { id: 'Legs', label: 'Piernas', def: 'CargoPants_Black' },
+            { id: 'Feet', label: 'Pies', def: 'JoggingShoes_Black' }
+        ];
+
+        let equipAtts = {};
+        equipSlots.forEach(s => equipAtts[s.id] = []);
+
+        // Replicando el archivo funcional
+        equipAtts['Back'] = ['Mag_Glock_15Rnd', 'Mag_Glock_15Rnd'];
+
+        const equipForm = document.getElementById('equip-form');
+        
+        function renderEquipSlots() {
+            equipForm.innerHTML = '';
+            equipSlots.forEach(slot => {
+                const card = document.createElement('div');
+                card.className = 'equip-card';
+                
+                let html = `
+                    <div class="slot-group">
+                        <div class="slot-label">${slot.label}</div>
+                        <img id="img-${slot.id}" class="item-thumb" src="${getImgUrl(slot.def)}" onerror="this.onerror=null; this.src='${getFallbackImg(slot.def)}'">
+                        <div class="slot-input-wrapper">
+                            <input type="text" id="${slot.id}" value="${slot.def}" list="list-${slot.id}" placeholder="Vacío..." oninput="handleEquipInput('${slot.id}')">
+                        </div>
+                    </div>
+                    <div class="equip-attachments-container">
+                `;
+
+                if(equipAtts[slot.id].length > 0) {
+                    html += `<div class="attachments-list">`;
+                    equipAtts[slot.id].forEach((att, attIndex) => {
+                        html += `<div class="attachment-item"><img class="att-thumb" src="${getImgUrl(att)}" onerror="this.onerror=null; this.src='${getFallbackImg(att)}'"><span style="flex:1;">${att}</span><button class="btn-small btn-danger" onclick="removeEquipAtt('${slot.id}', ${attIndex})">x</button></div>`;
+                    });
+                    html += `</div>`;
+                }
+
+                html += `<div class="add-attachment-ui"><input type="text" id="equip-att-input-${slot.id}" list="all-items" placeholder="Anclar accesorio..."><button class="btn-small btn-add" onclick="addEquipAtt('${slot.id}')">+</button></div>
+                    </div>
+                `;
+                
+                card.innerHTML = html;
+                equipForm.appendChild(card);
+            });
+        }
+
+        window.handleEquipInput = function(slotId) {
+            const val = document.getElementById(slotId).value.trim();
+            const slotData = equipSlots.find(s => s.id === slotId);
+            slotData.def = val;
+            const imgEl = document.getElementById(`img-${slotId}`);
+            if(imgEl) { imgEl.src = getImgUrl(val); imgEl.onerror = () => { imgEl.onerror=null; imgEl.src = getFallbackImg(val); }; }
+            updateJson();
+        }
+
+        window.addEquipAtt = function(slotId) {
+            const input = document.getElementById(`equip-att-input-${slotId}`);
+            const val = input.value.trim();
+            if(val) { equipAtts[slotId].push(val); renderEquipSlots(); updateJson(); }
+        }
+
+        window.removeEquipAtt = function(slotId, attIndex) {
+            equipAtts[slotId].splice(attIndex, 1); renderEquipSlots(); updateJson();
+        }
+
+        function updateEquipImages() { renderEquipSlots(); }
+
+        let cargoItems = [
+            { name: "Glock19", attachments: ["Mag_Glock_15Rnd"], destination: "Hands" },
+            { name: "BakedBeansCan", attachments: [], destination: "cargo" },
+            { name: "BandageDressing", attachments: [], destination: "cargo" },
+            { name: "WaterBottle", attachments: [], destination: "cargo" },
+            { name: "KitchenKnife", attachments: [], destination: "cargo" },
+            { name: "ChernarusMap", attachments: [], destination: "cargo" }
+        ];
+
+        const cargoList = document.getElementById('cargo-list');
+        const addCargoBtn = document.getElementById('add-cargo-btn');
+        const newCargoInput = document.getElementById('new-cargo-item');
+        const newCargoDest = document.getElementById('new-cargo-dest');
+
+        function renderCargo() {
+            cargoList.innerHTML = '';
+            cargoItems.forEach((itemObj, index) => {
+                const li = document.createElement('li');
+                let destClass = 'dest-cargo'; let badgeClass = 'badge-cargo'; let badgeText = 'INVENTARIO';
+                if(itemObj.destination === 'shoulderL') { destClass = 'dest-shoulderL'; badgeClass = 'badge-shoulder'; badgeText = 'HOMBRO IZQ'; } 
+                else if(itemObj.destination === 'shoulderR') { destClass = 'dest-shoulderR'; badgeClass = 'badge-shoulder'; badgeText = 'HOMBRO DER'; }
+                else if(itemObj.destination === 'Hands') { destClass = 'dest-hands'; badgeClass = 'badge-hands'; badgeText = 'MANOS'; }
+                
+                li.className = `cargo-item ${destClass}`;
+                
+                let html = `
+                    <div class="cargo-header-wrapper">
+                        <img class="item-thumb" src="${getImgUrl(itemObj.name)}" onerror="this.onerror=null; this.src='${getFallbackImg(itemObj.name)}'">
+                        <div class="cargo-header-info">
+                            <div class="cargo-title">${itemObj.name} <span class="badge ${badgeClass}">${badgeText}</span></div>
+                            <div>
+                                <select class="btn-small" style="background:#333; color:white;" onchange="changeDestination(${index}, this.value)">
+                                    <option value="cargo" ${itemObj.destination === 'cargo' ? 'selected' : ''}>A Inventario</option>
+                                    <option value="Hands" ${itemObj.destination === 'Hands' ? 'selected' : ''}>A las Manos</option>
+                                    <option value="shoulderL" ${itemObj.destination === 'shoulderL' ? 'selected' : ''}>A Hombro Izq</option>
+                                    <option value="shoulderR" ${itemObj.destination === 'shoulderR' ? 'selected' : ''}>A Hombro Der</option>
+                                </select>
+                                <button class="btn-small btn-danger" onclick="removeCargo(${index})">X</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                if(itemObj.attachments.length > 0) {
+                    html += `<div class="attachments-list">`;
+                    itemObj.attachments.forEach((att, attIndex) => {
+                        html += `<div class="attachment-item"><img class="att-thumb" src="${getImgUrl(att)}" onerror="this.onerror=null; this.src='${getFallbackImg(att)}'"><span style="flex:1;">${att}</span><button class="btn-small btn-danger" onclick="removeAttachment(${index}, ${attIndex})">x</button></div>`;
+                    });
+                    html += `</div>`;
+                }
+
+                html += `<div class="add-attachment-ui"><input type="text" id="att-input-${index}" list="all-items" placeholder="Anclar mira, cargador..."><button class="btn-small btn-add" onclick="addAttachment(${index})">+</button></div>`;
+                
+                li.innerHTML = html;
+                cargoList.appendChild(li);
+            });
+            updateJson();
+        }
+
+        addCargoBtn.addEventListener('click', () => {
+            const val = newCargoInput.value.trim();
+            const dest = newCargoDest.value;
+            if(val) {
+                const existUnique = cargoItems.find(i => i.destination === dest);
+                if ((dest === 'shoulderL' || dest === 'shoulderR' || dest === 'Hands') && existUnique) {
+                    alert('Solo puedes tener 1 objeto principal en esta ranura. Se reemplazará.');
+                    cargoItems = cargoItems.filter(i => i.destination !== dest);
+                }
+                cargoItems.push({ name: val, attachments: [], destination: dest });
+                newCargoInput.value = '';
+                renderCargo();
+            }
+        });
+
+        newCargoInput.addEventListener('keypress', (e) => { if(e.key === 'Enter') addCargoBtn.click(); });
+        window.removeCargo = function(index) { cargoItems.splice(index, 1); renderCargo(); }
+        window.addAttachment = function(cargoIndex) { const input = document.getElementById(`att-input-${cargoIndex}`); const val = input.value.trim(); if(val) { cargoItems[cargoIndex].attachments.push(val); renderCargo(); } }
+        window.removeAttachment = function(cargoIndex, attIndex) { cargoItems[cargoIndex].attachments.splice(attIndex, 1); renderCargo(); }
+        window.changeDestination = function(index, newDest) { 
+            const existing = cargoItems.find(i => i.destination === newDest); 
+            if ((newDest === 'shoulderL' || newDest === 'shoulderR' || newDest === 'Hands') && existing) { alert('Ranura ocupada. Borra el ítem actual primero.'); renderCargo(); return; } 
+            cargoItems[index].destination = newDest; renderCargo(); 
+        }
+
+        function getAutoChildren(itemName) {
+            let nameLower = itemName.toLowerCase();
+            let simpleChildren = [];
+            if (nameLower.includes('headtorch') || nameLower.includes('optic') || nameLower.includes('universallight') || nameLower.includes('radio') || nameLower.includes('nvg')) {
+                simpleChildren.push('Battery9V');
+            }
+            if (nameLower.includes('mag_stanag')) simpleChildren.push('Ammo_556x45');
+            else if (nameLower.includes('mag_akm') || nameLower.includes('mag_ak101')) simpleChildren.push('Ammo_762x39');
+            else if (nameLower.includes('mag_glock')) simpleChildren.push('Ammo_9x19');
+            return simpleChildren;
+        }
+
+        // Crea el set complejo LIMPIO (sin variables innecesarias como el archivo funcional)
+        function createComplexItemSet(itemName, stringAttachments = []) {
+            let complexChildren = [];
+            
+            if(stringAttachments.length > 0) {
+                stringAttachments.forEach(attName => {
+                    let attObj = {
+                        "itemType": attName,
+                        "attributes": { "healthMin": 1, "healthMax": 1, "quantityMin": 1, "quantityMax": 1 }
+                    };
+                    
+                    let attChildren = getAutoChildren(attName);
+                    if (attChildren.length > 0) {
+                        attObj["simpleChildrenTypes"] = attChildren;
+                        attObj["simpleChildrenUseDefaultAttributes"] = false;
+                    }
+                    complexChildren.push(attObj);
+                });
+            }
+
+            let mainObj = {
+                "itemType": itemName,
+                "spawnWeight": 1,
+                "attributes": { "healthMin": 1, "healthMax": 1, "quantityMin": 1, "quantityMax": 1 }
+            };
+
+            let simpleChildren = getAutoChildren(itemName);
+            
+            // Replicamos la limpieza del archivo funcional
+            mainObj["simpleChildrenTypes"] = simpleChildren;
+            mainObj["simpleChildrenUseDefaultAttributes"] = false;
+            mainObj["complexChildrenTypes"] = complexChildren;
+
+            return mainObj;
+        }
+
+        function updateJson() {
+            const preset = {
+                "spawnWeight": 1,
+                "name": "DZB_Loadout_All",
+                "characterTypes": Array.from(document.querySelectorAll('.surv-cb:checked')).map(cb => cb.value),
+                "attachmentSlotItemSets": [],
+                "discreteUnsortedItemSets": []
+            };
+
+            equipSlots.forEach(slot => {
+                const val = document.getElementById(slot.id).value.trim();
+                if(val) {
+                    const attachments = equipAtts[slot.id];
+                    let itemObj = createComplexItemSet(val, attachments);
+                    
+                    // Lógica para inyectar los objetos libres (cargo) en la ropa (como Body o Legs)
+                    // si en el futuro se quiere hacer así, pero por ahora respetamos el Cargo global.
+                    
+                    preset.attachmentSlotItemSets.push({
+                        "slotName": slot.id,
+                        "discreteItemSets": [ itemObj ]
+                    });
+                }
+            });
+
+            const simpleCargo = [];
+
+            cargoItems.forEach(item => {
+                if (item.destination === 'cargo') {
+                    simpleCargo.push(item.name);
+                } else {
+                    preset.attachmentSlotItemSets.push({
+                        "slotName": item.destination,
+                        "discreteItemSets": [ createComplexItemSet(item.name, item.attachments) ]
+                    });
+                }
+            });
+
+            if (simpleCargo.length > 0) {
+                preset.discreteUnsortedItemSets.push({
+                    "name": "Cargo_1",
+                    "spawnWeight": 1,
+                    "attributes": { "healthMin": 1, "healthMax": 1, "quantityMin": 1, "quantityMax": 1 },
+                    "simpleChildrenUseDefaultAttributes": false,
+                    "simpleChildrenTypes": simpleCargo,
+                    "complexChildrenTypes": []
+                });
+            }
+
+            // AQUI OCURRE LA MAGIA DEL MOTOR DE DAYZ (Forzar decimales .0)
+            let jsonStr = JSON.stringify(preset, null, 4);
+            jsonStr = jsonStr.replace(/"(healthMin|healthMax|quantityMin|quantityMax)": (\d+)(?!\.)/g, '"$1": $2.0');
+            
+            document.getElementById('json-preview').textContent = jsonStr;
+        }
+
+        document.getElementById('export-btn').addEventListener('click', () => {
+            const jsonStr = document.getElementById('json-preview').textContent;
+            const blob = new Blob([jsonStr], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = "spawnGearPresets.json";
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        });
+
+        renderEquipSlots();
+        renderCargo();
+    </script>
+</body>
+</html>
