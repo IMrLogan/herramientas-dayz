@@ -87,8 +87,7 @@
         ::-webkit-scrollbar-thumb { background: #555; border-radius: 3px; }
         ::-webkit-scrollbar-thumb:hover { background: var(--primary); }
         .db-status { font-size: 12px; color: var(--text-muted); margin-left: 15px; }
-        .db-status span { color: var(--danger); font-weight: bold;}
-        .db-status.loaded span { color: var(--primary); }
+        .db-status span { color: var(--warning); font-weight: bold;}
         
         .img-config { display: flex; align-items: center; gap: 10px; font-size: 12px; margin-top: 5px; color: var(--text-muted);}
         .img-config input { padding: 4px; background: #222; border: 1px solid #444; color: white; border-radius: 3px; width: 150px;}
@@ -109,19 +108,19 @@
         <div>
             <div style="display: flex; align-items: center;">
                 <h1>Spawn Gear Presets V8 <span style="font-size: 12px; color: var(--text-muted);">(Engine Fix)</span></h1>
-                <div id="db-indicator" class="db-status">Base de datos: <span>Vacía</span></div>
+                <div id="db-indicator" class="db-status">Base de datos: <span>Cargando auto...</span></div>
             </div>
-            <div class="img-config">
+            <div class="img-config" style="display: none;">
                 Origen Imágenes: 
                 <input type="text" id="img-base-url" value="images/" title="Carpeta local o URL">
             </div>
         </div>
         <div class="controls">
-            <label class="file-upload-label">
-                1. Cargar types.xml
+            <label class="file-upload-label" id="manual-upload-btn" style="display: none;">
+                Cargar types.xml Manual
                 <input type="file" id="file-input" accept=".xml">
             </label>
-            <button id="export-btn">2. Descargar preset.json</button>
+            <button id="export-btn">Descargar preset.json</button>
         </div>
     </header>
 <div style="background-color: var(--bg-panel); padding: 10px 30px; border-bottom: 1px solid var(--border);">
@@ -190,41 +189,65 @@
         };
 
         let itemsDB = [];
+
+        // Función separada para procesar el XML (así la usamos para automático o manual)
+        function processXML(xmlString) {
+            const parser = new DOMParser();
+            const types = parser.parseFromString(xmlString, "application/xml").getElementsByTagName('type');
+            
+            document.getElementById('all-items').innerHTML = '';
+            Object.keys(categoryKeywords).forEach(key => document.getElementById('list-' + key).innerHTML = '');
+
+            itemsDB = [];
+            const fragments = { 'all': document.createDocumentFragment() };
+            Object.keys(categoryKeywords).forEach(key => fragments[key] = document.createDocumentFragment() );
+
+            for (let i = 0; i < types.length; i++) {
+                const name = types[i].getAttribute('name');
+                if(name) {
+                    itemsDB.push(name);
+                    const nameLower = name.toLowerCase();
+                    const optionAll = document.createElement('option'); optionAll.value = name;
+                    fragments['all'].appendChild(optionAll);
+
+                    for (const [slot, keywords] of Object.entries(categoryKeywords)) {
+                        if (keywords.some(kw => nameLower.includes(kw))) {
+                            const optionSlot = document.createElement('option'); optionSlot.value = name;
+                            fragments[slot].appendChild(optionSlot);
+                            break; 
+                        }
+                    }
+                }
+            }
+            document.getElementById('all-items').appendChild(fragments['all']);
+            Object.keys(categoryKeywords).forEach(key => document.getElementById('list-' + key).appendChild(fragments[key]) );
+            document.getElementById('db-indicator').innerHTML = `Base de datos: <span style="color:var(--primary)">Cargada (Auto)</span>`;
+            document.getElementById('manual-upload-btn').style.display = 'none'; // Oculta el manual si funcionó
+        }
+
+        // --- SISTEMA AUTOMÁTICO DE LECTURA ---
+        fetch('types.xml')
+            .then(response => {
+                if (!response.ok) throw new Error("Archivo types.xml no encontrado en el servidor");
+                return response.text();
+            })
+            .then(data => {
+                processXML(data);
+            })
+            .catch(error => {
+                console.warn(error);
+                document.getElementById('db-indicator').innerHTML = `Base de datos: <span style="color:var(--danger)">Falta types.xml</span>`;
+                // Muestra el botón manual como plan de emergencia
+                document.getElementById('manual-upload-btn').style.display = 'inline-block';
+            });
+
+        // Plan de emergencia manual
         document.getElementById('file-input').addEventListener('change', function(event) {
             const file = event.target.files[0];
             if (!file) return;
             const reader = new FileReader();
             reader.onload = function(e) {
-                const parser = new DOMParser();
-                const types = parser.parseFromString(e.target.result, "application/xml").getElementsByTagName('type');
-                
-                document.getElementById('all-items').innerHTML = '';
-                Object.keys(categoryKeywords).forEach(key => document.getElementById('list-' + key).innerHTML = '');
-
-                itemsDB = [];
-                const fragments = { 'all': document.createDocumentFragment() };
-                Object.keys(categoryKeywords).forEach(key => fragments[key] = document.createDocumentFragment() );
-
-                for (let i = 0; i < types.length; i++) {
-                    const name = types[i].getAttribute('name');
-                    if(name) {
-                        itemsDB.push(name);
-                        const nameLower = name.toLowerCase();
-                        const optionAll = document.createElement('option'); optionAll.value = name;
-                        fragments['all'].appendChild(optionAll);
-
-                        for (const [slot, keywords] of Object.entries(categoryKeywords)) {
-                            if (keywords.some(kw => nameLower.includes(kw))) {
-                                const optionSlot = document.createElement('option'); optionSlot.value = name;
-                                fragments[slot].appendChild(optionSlot);
-                                break; 
-                            }
-                        }
-                    }
-                }
-                document.getElementById('all-items').appendChild(fragments['all']);
-                Object.keys(categoryKeywords).forEach(key => document.getElementById('list-' + key).appendChild(fragments[key]) );
-                document.getElementById('db-indicator').innerHTML = `Base de datos: <span style="color:var(--primary)">Cargada</span>`;
+                processXML(e.target.result);
             };
             reader.readAsText(file);
         });
