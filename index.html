@@ -3,37 +3,40 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DayZ Spawn Gear Presets V8 (Engine Fix & Mobile)</title>
+    <title>DayZ Spawn Gear Presets V8 - IMrLogan</title>
     <style>
         :root {
-            --bg-dark: #121212; --bg-panel: #1e1e1e; --bg-slot: #2b2b2b;
-            --primary: #4caf50; --primary-hover: #45a049; --secondary: #2196F3;
-            --warning: #ff9800; --danger: #f44336;
-            --text-light: #ffffff; --text-muted: #aaaaaa; --border: #333333;
+            --bg-dark: #121212; --bg-panel: #1a1e19; --bg-slot: #242922;
+            --primary: #5c7b39; --primary-hover: #6f9445; --secondary: #c9510c;
+            --danger: #9c2727; --text-light: #e0e0e0; --text-muted: #888;
+            --border: #31382b; --accent: #a3b88b;
         }
 
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg-dark); color: var(--text-light); margin: 0; padding: 0; display: flex; flex-direction: column; min-height: 100vh; }
         
-        header { background-color: var(--bg-panel); padding: 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); box-shadow: 0 4px 6px rgba(0,0,0,0.3); z-index: 10; flex-wrap: wrap; gap: 10px; }
-        header h1 { margin: 0; font-size: 20px; color: var(--primary); text-transform: uppercase; letter-spacing: 1px; }
+        /* HEADER ESTILO DAYZ */
+        header { background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.9)), url('https://placehold.co/1200x200/121212/5c7b39?text=DAYZ+LOADOUT+CREATOR') center/cover; padding: 20px; border-bottom: 3px solid var(--primary); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+        header h1 { margin: 0; font-size: 28px; color: var(--accent); text-transform: uppercase; letter-spacing: 2px; text-shadow: 2px 2px 4px #000; }
         
-        .nav-bar { background-color: var(--bg-panel); padding: 10px 15px; border-bottom: 1px solid var(--border); text-align: center; display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; }
-        .nav-bar a { color: var(--text-muted); text-decoration: none; font-weight: bold; font-size: 14px; padding: 5px 10px; border-radius: 4px; transition: 0.3s; }
-        .nav-bar a:hover, .nav-bar a.active { color: var(--primary); background: rgba(76, 175, 80, 0.1); }
+        /* BARRA DE NAVEGACIÓN */
+        .nav-bar { background-color: #000; padding: 10px; text-align: center; border-bottom: 1px solid var(--border); }
+        .nav-bar a { color: var(--text-muted); text-decoration: none; font-weight: bold; margin: 0 15px; transition: 0.3s; font-size: 14px; }
+        .nav-bar a:hover, .nav-bar a.active { color: var(--primary); }
 
         .controls { display: flex; gap: 10px; flex-wrap: wrap; }
-        button, .file-upload-label { background-color: var(--primary); color: white; border: none; padding: 10px 15px; cursor: pointer; border-radius: 5px; font-weight: bold; font-size: 13px; transition: background 0.3s; }
+        button, .file-upload-label { background-color: var(--primary); color: white; border: none; padding: 10px 15px; cursor: pointer; border-radius: 4px; font-weight: bold; font-size: 13px; text-transform: uppercase; transition: background 0.3s; }
         button:hover, .file-upload-label:hover { background-color: var(--primary-hover); }
         .file-upload-label { background-color: var(--secondary); }
+        .file-upload-label:hover { background-color: #a84208; }
         input[type="file"] { display: none; }
         
-        main { display: flex; flex: 1; padding: 15px; gap: 15px; overflow-x: hidden; }
-        .column { background-color: var(--bg-panel); border: 1px solid var(--border); border-radius: 8px; padding: 15px; display: flex; flex-direction: column; flex: 1; min-width: 320px; }
+        main { display: flex; flex: 1; padding: 20px; gap: 20px; max-width: 1600px; margin: auto; width: 100%; box-sizing: border-box; overflow-x: hidden; }
         
-        /* RESPONSIVIDAD PARA CELULARES */
+        /* PANELES */
+        .column { background-color: var(--bg-panel); border: 1px solid var(--border); border-radius: 6px; padding: 20px; display: flex; flex-direction: column; flex: 1; min-width: 320px; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+        
         @media (max-width: 1024px) {
             main { flex-direction: column; overflow-y: visible; }
-            body { height: auto; }
             .column { min-width: 100%; box-sizing: border-box; }
             header { flex-direction: column; text-align: center; }
         }
@@ -42,52 +45,55 @@
 
         .survivor-controls { margin-bottom: 10px; display: flex; gap: 5px;}
         .survivor-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; font-size: 13px;}
-        .survivor-list label { display: flex; align-items: center; gap: 8px; cursor: pointer; background: var(--bg-dark); padding: 5px; border-radius: 4px; }
+        .survivor-list label { display: flex; align-items: center; gap: 8px; cursor: pointer; background: var(--bg-slot); padding: 6px; border-radius: 4px; border: 1px solid var(--border); transition: 0.2s;}
+        .survivor-list label:hover { border-color: var(--primary); }
 
-        .equip-card { background: var(--bg-dark); border: 1px solid var(--border); border-radius: 6px; margin-bottom: 10px; padding: 8px;}
+        .equip-card { background: var(--bg-dark); border: 1px solid var(--border); border-radius: 6px; margin-bottom: 10px; padding: 10px;}
         .slot-group { display: flex; align-items: center; gap: 10px; }
-        .slot-label { width: 70px; font-size: 11px; color: var(--text-muted); font-weight: bold; text-transform: uppercase;}
-        .item-thumb { width: 40px; height: 40px; background-color: #222; border-radius: 4px; object-fit: contain; border: 1px solid #444;}
+        .slot-label { width: 70px; font-size: 11px; color: var(--accent); font-weight: bold; text-transform: uppercase;}
+        .item-thumb { width: 40px; height: 40px; background-color: #000; border-radius: 4px; object-fit: contain; border: 1px solid #333;}
         
         .slot-input-wrapper { flex: 1; }
         .slot-input-wrapper input, select { width: 100%; padding: 10px; background-color: var(--bg-slot); border: 1px solid var(--border); color: white; border-radius: 4px; box-sizing: border-box; }
         .slot-input-wrapper input:focus, select:focus { outline: none; border-color: var(--primary); }
 
-        .equip-attachments-container { margin-left: 0; margin-top: 10px; padding-left: 10px; border-left: 2px solid #333;}
+        .equip-attachments-container { margin-left: 0; margin-top: 10px; padding-left: 10px; border-left: 2px solid var(--secondary);}
         
         .cargo-input-container { display: flex; flex-direction: column; gap: 8px; margin-bottom: 15px; }
-        .cargo-item { background-color: var(--bg-slot); padding: 10px; margin-bottom: 10px; border-radius: 4px; border-left: 3px solid var(--primary); display: flex; flex-direction: column; gap: 5px;}
+        .cargo-item { background-color: var(--bg-slot); padding: 10px; margin-bottom: 10px; border-radius: 4px; border-left: 3px solid var(--primary); display: flex; flex-direction: column; gap: 5px; border: 1px solid var(--border);}
         
         .dest-cargo { border-left-color: var(--primary); }
-        .dest-shoulderL { border-left-color: var(--warning); }
-        .dest-shoulderR { border-left-color: var(--secondary); }
-        .dest-hands { border-left-color: #9c27b0; }
+        .dest-shoulderL { border-left-color: var(--secondary); }
+        .dest-shoulderR { border-left-color: var(--accent); }
+        .dest-hands { border-left-color: #8c734b; }
         
         .cargo-header-wrapper { display: flex; align-items: center; gap: 10px; flex-wrap: wrap;}
         .cargo-header-info { flex: 1; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 5px;}
         .cargo-title { font-weight: bold; display: flex; align-items: center; gap: 10px;}
         
-        .badge { font-size: 10px; padding: 3px 6px; border-radius: 10px; background: #444; text-transform: uppercase; }
-        .badge-cargo { background-color: rgba(76, 175, 80, 0.2); color: #81c784; }
-        .badge-shoulder { background-color: rgba(255, 152, 0, 0.2); color: #ffb74d; }
-        .badge-hands { background-color: rgba(156, 39, 176, 0.2); color: #ce93d8; }
+        .badge { font-size: 10px; padding: 3px 6px; border-radius: 3px; background: #333; text-transform: uppercase; color: #fff;}
+        .badge-cargo { background-color: var(--primary); }
+        .badge-shoulder { background-color: var(--secondary); }
+        .badge-hands { background-color: #8c734b; }
         
         .btn-small { padding: 6px 10px; font-size: 12px; margin-left: 5px; cursor: pointer; border: none; border-radius: 3px; color: white;}
         .btn-danger { background-color: var(--danger); }
-        .btn-danger:hover { background-color: #d32f2f; }
-        .btn-add { background-color: #555; }
+        .btn-danger:hover { background-color: #ba2f2f; }
+        .btn-add { background-color: #444; }
         .btn-add:hover { background-color: var(--primary); }
         
         .attachments-list { margin-top: 5px; padding-left: 5px; border-top: 1px dashed var(--border); padding-top: 5px;}
-        .attachment-item { display: flex; align-items: center; gap: 10px; background-color: #222; padding: 5px; margin-bottom: 3px; border-radius: 3px; font-size: 12px;}
-        .att-thumb { width: 30px; height: 30px; object-fit: contain; background: #111; border-radius: 3px;}
+        .attachment-item { display: flex; align-items: center; gap: 10px; background-color: #111; padding: 5px; margin-bottom: 3px; border-radius: 3px; font-size: 12px;}
+        .att-thumb { width: 30px; height: 30px; object-fit: contain; background: #000; border-radius: 3px; border: 1px solid #222;}
         
         .add-attachment-ui { display: flex; gap: 5px; margin-top: 5px; }
-        .add-attachment-ui input { flex: 1; padding: 8px; font-size: 13px; background-color: #1a1a1a; border: 1px solid var(--border); color: white; border-radius: 3px;}
+        .add-attachment-ui input { flex: 1; padding: 8px; font-size: 13px; background-color: var(--bg-dark); border: 1px solid var(--border); color: white; border-radius: 3px;}
 
-        #json-preview { background-color: var(--bg-dark); padding: 15px; border-radius: 5px; border: 1px solid var(--border); color: #a6e22e; font-family: monospace; font-size: 12px; white-space: pre-wrap; word-break: break-all; overflow-y: auto; flex: 1; margin: 0;}
+        #json-preview { background-color: #0d110b; padding: 15px; border-radius: 4px; border: 1px solid #222; color: #a6e22e; font-family: monospace; font-size: 12px; white-space: pre-wrap; word-break: break-all; overflow-y: auto; flex: 1; margin: 0;}
         
-        .db-status { font-size: 12px; color: var(--text-muted); }
+        .db-status { font-size: 12px; color: var(--text-muted); margin-top: 5px;}
+        
+        footer { text-align: center; padding: 20px; color: #888; font-size: 13px; font-weight: bold; border-top: 1px solid #333; background-color: var(--bg-panel); letter-spacing: 1px; margin-top: auto;}
     </style>
 </head>
 <body>
@@ -96,8 +102,8 @@
 
     <header>
         <div>
-            <h1>Spawn Gear V8 <span style="font-size: 10px; color: var(--text-muted);">Auto & Mobile</span></h1>
-            <div id="db-indicator" class="db-status">Base de datos: <span style="color:var(--warning)">Cargando auto...</span></div>
+            <h1>Spawn Gear V8</h1>
+            <div id="db-indicator" class="db-status">Base de datos: <span style="color:var(--accent)">Cargando auto...</span></div>
         </div>
         <div class="controls">
             <label class="file-upload-label" id="manual-upload-btn" style="display: none;">
@@ -109,9 +115,10 @@
     </header>
 
     <div class="nav-bar">
-        <a href="index.html" class="active">🛠️ Creador Loadouts</a>
+        <a href="index.html" class="active" style="color:var(--primary);">🛠️ Creador Loadouts</a>
         <a href="spawn.html">🚗 Spawns Autos</a>
         <a href="npc_maker.html">🧍 Creador NPCs</a>
+        <a href="types_editor.html">📦 Types Editor</a>
     </div>
 
     <main>
@@ -153,7 +160,7 @@
     <script>
         // Configuración de rutas e imágenes
         function getImgUrl(itemName) {
-            if(!itemName) return 'https://placehold.co/40x40/2b2b2b/4caf50?text=?';
+            if(!itemName) return 'https://placehold.co/40x40/2b2b2b/5c7b39?text=?';
             return `${document.getElementById('img-base-url').value}${itemName}.png`;
         }
         function getFallbackImg(itemName) {
@@ -317,7 +324,7 @@
                         <div class="cargo-header-info">
                             <div class="cargo-title">${itemObj.name} <span class="badge ${badgeClass}">${badgeText}</span></div>
                             <div>
-                                <select class="btn-small" style="background:#333; color:white; margin-bottom: 5px;" onchange="changeDestination(${index}, this.value)">
+                                <select class="btn-small" style="background:#000; color:white; margin-bottom: 5px; border: 1px solid #333;" onchange="changeDestination(${index}, this.value)">
                                     <option value="cargo" ${itemObj.destination === 'cargo' ? 'selected' : ''}>A Inventario</option>
                                     <option value="Hands" ${itemObj.destination === 'Hands' ? 'selected' : ''}>A Manos</option>
                                     <option value="shoulderL" ${itemObj.destination === 'shoulderL' ? 'selected' : ''}>Hombro Izq</option>
@@ -370,7 +377,6 @@
             cargoItems[index].destination = newDest; renderCargo(); 
         }
 
-        // Lógica de JSON del Motor
         function getAutoChildren(itemName) {
             let nameLower = itemName.toLowerCase();
             let simpleChildren = [];
@@ -460,7 +466,6 @@
                 });
             }
 
-            // Magia del motor de DayZ (Forzar decimales .0)
             let jsonStr = JSON.stringify(preset, null, 4);
             jsonStr = jsonStr.replace(/"(healthMin|healthMax|quantityMin|quantityMax)": (\d+)(?!\.)/g, '"$1": $2.0');
             
@@ -483,7 +488,7 @@
         renderEquipSlots();
         renderCargo();
     </script>
-    <footer style="text-align: center; padding: 20px; color: #888; font-size: 13px; font-weight: bold; margin-top: 20px; border-top: 1px solid #333; background-color: #1a1e19; letter-spacing: 1px;">
+    <footer>
         Created by IMrLogan 💀 DayZ Tools
     </footer>
 </body>

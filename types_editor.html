@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DayZ Types Editor - IMrLogan</title>
+    <style>
+        :root {
+            --bg-dark: #121212; --bg-panel: #1a1e19; --bg-slot: #242922;
+            --primary: #5c7b39; --primary-hover: #6f9445; --secondary: #c9510c;
+            --danger: #9c2727; --text-light: #e0e0e0; --text-muted: #888;
+            --border: #31382b; --accent: #a3b88b;
+        }
+
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg-dark); color: var(--text-light); margin: 0; padding: 0; display: flex; flex-direction: column; min-height: 100vh;}
+        
+        /* HEADER ESTILO DAYZ */
+        header { background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.9)), url('https://placehold.co/1200x200/121212/5c7b39?text=DAYZ+TYPES+EDITOR') center/cover; padding: 20px; border-bottom: 3px solid var(--primary); text-align: center; }
+        header h1 { margin: 0; font-size: 28px; color: var(--accent); text-transform: uppercase; letter-spacing: 2px; text-shadow: 2px 2px 4px #000; }
+        
+        /* BARRA DE NAVEGACIÓN */
+        .nav-bar { background-color: #000; padding: 10px; text-align: center; border-bottom: 1px solid var(--border); }
+        .nav-bar a { color: var(--text-muted); text-decoration: none; font-weight: bold; margin: 0 15px; transition: 0.3s; }
+        .nav-bar a:hover { color: var(--primary); }
+
+        main { padding: 20px; max-width: 1600px; margin: auto; flex: 1; width: 100%; box-sizing: border-box; }
+        .panel { background-color: var(--bg-panel); border: 1px solid var(--border); border-radius: 6px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+        h2 { color: var(--primary); border-bottom: 1px solid var(--border); padding-bottom: 10px; margin-top: 0; font-size: 16px; text-transform: uppercase; }
+
+        /* CONTROLES Y FORMAS */
+        .row { display: flex; gap: 15px; flex-wrap: wrap; align-items: flex-end;}
+        .form-group { flex: 1; min-width: 150px; }
+        .form-group label { display: block; font-size: 11px; color: var(--accent); font-weight: bold; margin-bottom: 5px; text-transform: uppercase; }
+        input[type="text"], input[type="number"], select { width: 100%; padding: 8px; background-color: var(--bg-slot); border: 1px solid var(--border); color: white; border-radius: 4px; box-sizing: border-box; font-size: 13px;}
+        input:focus, select:focus { outline: none; border-color: var(--primary); }
+        
+        button, .file-upload-label { background-color: var(--primary); color: white; border: none; padding: 10px 20px; cursor: pointer; border-radius: 4px; font-weight: bold; text-transform: uppercase; transition: 0.3s; display: inline-block; text-align: center;}
+        button:hover, .file-upload-label:hover { background-color: var(--primary-hover); }
+        .btn-secondary { background-color: var(--secondary); }
+        .btn-secondary:hover { background-color: #a84208; }
+        input[type="file"] { display: none; }
+
+        /* TABLA DE ITEMS Y MINIATURAS */
+        .table-container { max-height: 55vh; overflow-y: auto; border: 1px solid var(--border); border-radius: 4px; background: var(--bg-dark); }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: left; }
+        th { background: #000; color: var(--primary); padding: 12px; position: sticky; top: 0; z-index: 10; border-bottom: 2px solid var(--border); text-transform: uppercase; font-size: 11px;}
+        td { padding: 8px 12px; border-bottom: 1px solid #222; color: #ddd; vertical-align: middle; }
+        tr:hover { background: var(--bg-slot); }
+        tr.selected { background: rgba(92, 123, 57, 0.2); }
+        
+        .item-thumb { width: 35px; height: 35px; background: #000; border-radius: 4px; object-fit: contain; border: 1px solid #333; display: block; margin: auto; }
+        
+        .badge { padding: 2px 6px; border-radius: 3px; font-size: 10px; margin-right: 3px; color: #fff; display: inline-block; margin-bottom: 2px;}
+        .badge-cat { background: #5c7b39; }
+        .badge-use { background: #444; }
+        .badge-tier { background: #c9510c; }
+        .badge-tag { background: #3b7494; }
+
+        /* FOOTER */
+        footer { text-align: center; padding: 20px; color: #888; font-size: 13px; font-weight: bold; border-top: 1px solid #333; background-color: var(--bg-panel); letter-spacing: 1px; margin-top: auto;}
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Types.xml Editor</h1>
+        <p style="margin:0; color:var(--text-muted); font-size:14px;">Edición masiva de loot y economía para DayZ</p>
+    </header>
+
+    <div class="nav-bar">
+        <a href="index.html">🛠️ Creador Loadouts</a>
+        <a href="spawn.html">🚗 Spawns Autos</a>
+        <a href="npc_maker.html">🧍 Creador NPCs</a>
+        <a href="types_editor.html" style="color:var(--primary);">📦 Types Editor</a>
+    </div>
+
+    <main>
+        <!-- PANEL 1: CARGA Y FILTROS -->
+        <div class="panel">
+            <div class="row" style="margin-bottom: 15px; justify-content: space-between;">
+                <div>
+                    <label class="file-upload-label">
+                        📂 Cargar types.xml
+                        <input type="file" id="file-input" accept=".xml">
+                    </label>
+                    <span id="file-status" style="margin-left: 10px; font-size: 13px; color: var(--text-muted);">Ningún archivo cargado...</span>
+                </div>
+                <div>
+                    <button class="btn-secondary" onclick="exportXML()">📥 Descargar types.xml Modificado</button>
+                </div>
+            </div>
+
+            <h2>Filtros de Búsqueda</h2>
+            <div class="row">
+                <div class="form-group">
+                    <label>Nombre del Item</label>
+                    <input type="text" id="filter-name" placeholder="Ej: M4A1..." onkeyup="applyFilters()">
+                </div>
+                <div class="form-group">
+                    <label>Categoría</label>
+                    <select id="filter-category" onchange="applyFilters()">
+                        <option value="">Todas</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Uso (Usage)</label>
+                    <select id="filter-usage" onchange="applyFilters()">
+                        <option value="">Todos</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Tier (Value)</label>
+                    <select id="filter-tier" onchange="applyFilters()">
+                        <option value="">Todos</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- PANEL 2: EDICIÓN MASIVA -->
+        <div class="panel">
+            <h2>Edición Masiva (Items Seleccionados)</h2>
+            
+            <!-- Cantidades y Tiempos -->
+            <div class="row" style="padding-bottom: 15px; border-bottom: 1px dashed var(--border); margin-bottom: 15px;">
+                <div class="form-group"><label>Nominal</label><input type="number" id="bulk-nominal" placeholder="Ej: 10"></div>
+                <div class="form-group"><label>Min</label><input type="number" id="bulk-min" placeholder="Ej: 5"></div>
+                <div class="form-group"><label>Lifetime (Seg)</label><input type="number" id="bulk-lifetime" placeholder="Ej: 7200"></div>
+                <div class="form-group"><label>Restock</label><input type="number" id="bulk-restock" placeholder="Ej: 0"></div>
+                <div class="form-group"><label>QuantMin (%)</label><input type="number" id="bulk-qmin" placeholder="Ej: 20"></div>
+                <div class="form-group"><label>QuantMax (%)</label><input type="number" id="bulk-qmax" placeholder="Ej: 100"></div>
+                <div class="form-group" style="flex: 0.5;">
+                    <button onclick="applyBulkEdit()" style="margin-top: 20px; width: 100%;">Aplicar</button>
+                </div>
+            </div>
+
+            <!-- Etiquetas Estructurales -->
+            <h3 style="font-size: 13px; color: var(--accent); margin-top: 0;">Gestión de Etiquetas Estructurales</h3>
+            <div class="row">
+                <div class="form-group">
+                    <label>Acción</label>
+                    <select id="tag-action">
+                        <option value="add">Agregar (+)</option>
+                        <option value="remove">Quitar (-)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Tipo de Etiqueta</label>
+                    <select id="tag-type" onchange="updateTagDropdown()">
+                        <option value="category">Categoría (Category)</option>
+                        <option value="usage">Uso (Usage)</option>
+                        <option value="value">Nivel (Value / Tier)</option>
+                        <option value="tag">Ubicación (Tag)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Valor Seleccionado</label>
+                    <select id="tag-value">
+                        <!-- Llenado por JS -->
+                    </select>
+                </div>
+                <div class="form-group" style="flex: 0.5;">
+                    <button class="btn-secondary" onclick="applyTagEdit()" style="margin-top: 20px; width: 100%;">Modificar Etiquetas</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- PANEL 3: TABLA DE DATOS -->
+        <div class="panel" style="padding: 0; overflow: hidden;">
+            <div class="table-container">
+                <table id="types-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 30px; text-align: center;"><input type="checkbox" id="select-all" onclick="toggleSelectAll()"></th>
+                            <th style="width: 50px; text-align: center;">Img</th>
+                            <th>Item Name</th>
+                            <th>Nominal</th>
+                            <th>Min</th>
+                            <th>Restock</th>
+                            <th>Lifetime</th>
+                            <th>Q.Min</th>
+                            <th>Q.Max</th>
+                            <th>Etiquetas (Categoría/Uso/Tier/Tag)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-body">
+                        <tr><td colspan="10" style="text-align:center; padding:20px; color:var(--text-muted);">Carga un archivo types.xml para comenzar</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div style="padding: 10px; background: #000; font-size: 12px; color: var(--primary);">Items mostrados: <span id="item-count">0</span></div>
+        </div>
+    </main>
+
+    <footer>
+        Created by IMrLogan 💀 DayZ Tools
+    </footer>
+
+    <script>
+        let xmlDoc = null;
+        let itemsData = [];
+
+        // CONFIGURACIÓN DE IMÁGENES
+        const imgBase = "images/";
+        function getImgUrl(name) { return name ? `${imgBase}${name}.png` : 'https://placehold.co/40x40/2b2b2b/5c7b39?text=?'; }
+        function getFallback(name) { return `https://placehold.co/40x40/222/555?text=${name ? name[0].toUpperCase() : '?'}`; }
+
+        // Listas oficiales de DayZ
+        const officialLists = {
+            category: ["tools", "containers", "clothes", "lootdispatch", "food", "weapons", "books", "explosives"],
+            usage: ["Military", "Police", "Medic", "Firefighter", "Industrial", "Farm", "Coast", "Town", "Village", "Hunting", "Office", "School", "Prison", "Lunapark", "SeasonalEvent", "ContaminatedArea", "Historical"],
+            value: ["Tier1", "Tier2", "Tier3", "Tier4", "Unique"],
+            tag: ["floor", "shelves", "ground"]
+        };
+
+        // Inicializar Dropdown de Etiquetas
+        function updateTagDropdown() {
+            const type = document.getElementById('tag-type').value;
+            const select = document.getElementById('tag-value');
+            select.innerHTML = '';
+            officialLists[type].forEach(val => {
+                select.innerHTML += `<option value="${val}">${val}</option>`;
+            });
+        }
+        updateTagDropdown(); 
+
+        // Lector de Archivos
+        document.getElementById('file-input').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            document.getElementById('file-status').textContent = `Cargando ${file.name}...`;
+            
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                const parser = new DOMParser();
+                xmlDoc = parser.parseFromString(evt.target.result, "application/xml");
+                parseXML();
+                document.getElementById('file-status').innerHTML = `<span style="color:var(--primary)">✔ ${file.name} cargado correctamente.</span>`;
+            };
+            reader.readAsText(file);
+        });
+
+        // Extraer Datos del XML
+        function parseXML() {
+            const types = xmlDoc.getElementsByTagName('type');
+            itemsData = [];
+            let fCategories = new Set(), fUsages = new Set(), fTiers = new Set();
+
+            for (let i = 0; i < types.length; i++) {
+                let node = types[i];
+                let name = node.getAttribute('name');
+                if(!name) continue;
+
+                const getVal = (tag) => node.getElementsByTagName(tag)[0] ? node.getElementsByTagName(tag)[0].textContent : '';
+                const getList = (tag, attr) => {
+                    let els = node.getElementsByTagName(tag);
+                    let res = [];
+                    for(let j=0; j<els.length; j++) {
+                        let a = els[j].getAttribute(attr);
+                        if(a) { 
+                            res.push(a); 
+                            if(tag==='category') fCategories.add(a); 
+                            if(tag==='usage') fUsages.add(a); 
+                            if(tag==='value') fTiers.add(a); 
+                        }
+                    }
+                    return res;
+                };
+
+                itemsData.push({
+                    node: node,
+                    name: name,
+                    nominal: getVal('nominal') || '0',
+                    min: getVal('min') || '0',
+                    restock: getVal('restock') || '0',
+                    lifetime: getVal('lifetime') || '0',
+                    quantmin: getVal('quantmin') || '-1',
+                    quantmax: getVal('quantmax') || '-1',
+                    category: getList('category', 'name'),
+                    usage: getList('usage', 'name'),
+                    tier: getList('value', 'name'),
+                    tag: getList('tag', 'name'),
+                    selected: false,
+                    visible: true
+                });
+            }
+
+            fillFilterDropdown('filter-category', fCategories);
+            fillFilterDropdown('filter-usage', fUsages);
+            fillFilterDropdown('filter-tier', fTiers);
+            applyFilters();
+        }
+
+        function fillFilterDropdown(id, set) {
+            const select = document.getElementById(id);
+            select.innerHTML = '<option value="">Todas</option>';
+            Array.from(set).sort().forEach(item => {
+                select.innerHTML += `<option value="${item}">${item}</option>`;
+            });
+        }
+
+        function applyFilters() {
+            if(itemsData.length === 0) return;
+            const fName = document.getElementById('filter-name').value.toLowerCase();
+            const fCat = document.getElementById('filter-category').value;
+            const fUse = document.getElementById('filter-usage').value;
+            const fTier = document.getElementById('filter-tier').value;
+
+            let count = 0;
+            itemsData.forEach(item => {
+                let match = true;
+                if(fName && !item.name.toLowerCase().includes(fName)) match = false;
+                if(fCat && !item.category.includes(fCat)) match = false;
+                if(fUse && !item.usage.includes(fUse)) match = false;
+                if(fTier && !item.tier.includes(fTier)) match = false;
+                
+                item.visible = match;
+                if(match) count++;
+            });
+
+            document.getElementById('item-count').textContent = count;
+            renderTable();
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('table-body');
+            let html = '';
+            let rendered = 0;
+
+            for (let i = 0; i < itemsData.length; i++) {
+                let item = itemsData[i];
+                if (!item.visible) continue;
+                if (rendered > 800) {
+                    html += `<tr><td colspan="10" style="text-align:center; color:var(--secondary);">Mostrando primeros 800 resultados. Usa los filtros.</td></tr>`;
+                    break;
+                }
+
+                let tagsHtml = item.category.map(c => `<span class="badge badge-cat">${c}</span>`).join('') +
+                               item.usage.map(u => `<span class="badge badge-use">${u}</span>`).join('') +
+                               item.tier.map(t => `<span class="badge badge-tier">${t}</span>`).join('') +
+                               item.tag.map(tg => `<span class="badge badge-tag">${tg}</span>`).join('');
+
+                html += `
+                    <tr class="${item.selected ? 'selected' : ''}" onclick="toggleRow(${i}, event)">
+                        <td style="text-align: center;"><input type="checkbox" ${item.selected ? 'checked' : ''} onclick="toggleRow(${i}, event)"></td>
+                        <td style="text-align: center;"><img class="item-thumb" src="${getImgUrl(item.name)}" onerror="this.src='${getFallback(item.name)}'"></td>
+                        <td style="font-weight:bold; color:var(--primary);">${item.name}</td>
+                        <td>${item.nominal}</td>
+                        <td>${item.min}</td>
+                        <td>${item.restock}</td>
+                        <td>${item.lifetime}</td>
+                        <td>${item.quantmin}</td>
+                        <td>${item.quantmax}</td>
+                        <td>${tagsHtml}</td>
+                    </tr>
+                `;
+                rendered++;
+            }
+            tbody.innerHTML = html || `<tr><td colspan="10" style="text-align:center;">No se encontraron resultados</td></tr>`;
+        }
+
+        function toggleRow(index, event) {
+            if(event.target.tagName !== 'INPUT') {
+                itemsData[index].selected = !itemsData[index].selected;
+            } else {
+                itemsData[index].selected = event.target.checked;
+            }
+            applyFilters();
+        }
+
+        function toggleSelectAll() {
+            const isChecked = document.getElementById('select-all').checked;
+            itemsData.forEach(item => {
+                if(item.visible) item.selected = isChecked;
+            });
+            renderTable();
+        }
+
+        // Modificar Cantidades
+        function applyBulkEdit() {
+            const updates = {
+                nominal: document.getElementById('bulk-nominal').value,
+                min: document.getElementById('bulk-min').value,
+                lifetime: document.getElementById('bulk-lifetime').value,
+                restock: document.getElementById('bulk-restock').value,
+                quantmin: document.getElementById('bulk-qmin').value,
+                quantmax: document.getElementById('bulk-qmax').value
+            };
+
+            let count = 0;
+            itemsData.forEach(item => {
+                if (item.selected) {
+                    Object.keys(updates).forEach(key => {
+                        if(updates[key] !== "") {
+                            updateNodeValue(item.node, key, updates[key], item);
+                        }
+                    });
+                    count++;
+                }
+            });
+
+            if(count > 0) { alert(`¡${count} items modificados con éxito!`); renderTable(); } 
+            else alert("Selecciona items en la tabla primero.");
+        }
+
+        function updateNodeValue(xmlNode, tagName, newValue, itemObj) {
+            let el = xmlNode.getElementsByTagName(tagName)[0];
+            if (el) el.textContent = newValue;
+            else {
+                let newEl = xmlDoc.createElement(tagName);
+                newEl.textContent = newValue;
+                xmlNode.appendChild(newEl);
+            }
+            itemObj[tagName] = newValue;
+        }
+
+        // Modificar Etiquetas XML Estructurales
+        function applyTagEdit() {
+            const action = document.getElementById('tag-action').value;
+            const xmlTagName = document.getElementById('tag-type').value;
+            const val = document.getElementById('tag-value').value;
+            let count = 0;
+
+            itemsData.forEach(item => {
+                if (item.selected) {
+                    const jsArrayName = (xmlTagName === 'value') ? 'tier' : xmlTagName;
+                    let arrayRef = item[jsArrayName];
+
+                    if (action === 'add') {
+                        if (!arrayRef.includes(val)) {
+                            arrayRef.push(val); 
+                            let newEl = xmlDoc.createElement(xmlTagName);
+                            newEl.setAttribute('name', val);
+                            item.node.appendChild(newEl);
+                            count++;
+                        }
+                    } else if (action === 'remove') {
+                        if (arrayRef.includes(val)) {
+                            item[jsArrayName] = arrayRef.filter(v => v !== val); 
+                            let els = item.node.getElementsByTagName(xmlTagName);
+                            for (let i = els.length - 1; i >= 0; i--) {
+                                if (els[i].getAttribute('name') === val) {
+                                    item.node.removeChild(els[i]);
+                                }
+                            }
+                            count++;
+                        }
+                    }
+                }
+            });
+
+            if(count > 0) { alert(`Etiqueta aplicada en ${count} items.`); renderTable(); } 
+            else alert("No se hicieron cambios (ya tenían la etiqueta o no seleccionaste items).");
+        }
+
+        // DESCARGA Y EMBELLECIMIENTO DEL ARCHIVO FINAL
+        function exportXML() {
+            if(!xmlDoc) { alert("¡Carga un types.xml primero!"); return; }
+            
+            const serializer = new XMLSerializer();
+            let xmlString = serializer.serializeToString(xmlDoc);
+            
+            if(!xmlString.startsWith('<?xml')) {
+                xmlString = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n' + xmlString;
+            }
+
+            // Aplicamos la magia del formato visual
+            xmlString = formatDayZXML(xmlString);
+
+            const blob = new Blob([xmlString], { type: "application/xml" });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = "types_modificado.xml";
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // EL MOTOR QUE ALINEA EL CÓDIGO XML
+        function formatDayZXML(xmlStr) {
+            let str = xmlStr.replace(/></g, '>\n<');
+            let lines = str.split('\n');
+            let formatted = [];
+            let indent = 0;
+
+            lines.forEach(line => {
+                line = line.trim();
+                if (!line) return;
+                
+                if (line.startsWith('</')) indent--;
+                formatted.push('    '.repeat(Math.max(0, indent)) + line);
+                
+                if (line.startsWith('<') && !line.startsWith('</') && !line.startsWith('<?') && !line.endsWith('/>') && !line.match(/<\/[^>]+>$/)) {
+                    indent++;
+                }
+            });
+            return formatted.join('\n');
+        }
+    </script>
+</body>
+</html>

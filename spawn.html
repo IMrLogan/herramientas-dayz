@@ -3,191 +3,94 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Visualizador Concesionario DayZ - 6 Autos</title>
+    <title>Visualizador Spawns DayZ - IMrLogan</title>
     <style>
         :root {
-            --bg-color: #1a1a2e;
-            --panel-bg: #16213e;
-            --text-color: #e94560;
-            --text-light: #fff;
-            --safe: #4CAF50;
-            --danger: #f44336;
-            --grid: #0f3460;
-            --code-bg: #0b0c10;
+            --bg-dark: #121212; --bg-panel: #1a1e19; --bg-slot: #242922;
+            --primary: #5c7b39; --primary-hover: #6f9445; --secondary: #c9510c;
+            --danger: #9c2727; --safe: #4CAF50;
+            --text-light: #e0e0e0; --text-muted: #888;
+            --border: #31382b; --accent: #a3b88b;
         }
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-light);
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-        h1 { color: var(--text-color); margin-top: 0; text-align: center;}
-        .container {
-            display: flex;
-            gap: 20px;
-            max-width: 1400px;
-            width: 100%;
-            align-items: flex-start;
-        }
-        .controls {
-            background-color: var(--panel-bg);
-            padding: 20px;
-            border-radius: 8px;
-            flex: 1;
-            max-width: 450px;
-            height: 85vh;
-            overflow-y: auto;
-        }
-        .row-title {
-            color: #a6e22e;
-            border-bottom: 1px solid #a6e22e;
-            padding-bottom: 5px;
-            margin-top: 20px;
-            margin-bottom: 10px;
-        }
-        .point-group {
-            background-color: rgba(0,0,0,0.2);
-            padding: 10px;
-            margin-bottom: 10px;
-            border-radius: 5px;
-            border-left: 4px solid var(--text-color);
-        }
-        .input-row {
-            display: flex;
-            gap: 10px;
-            margin-top: 5px;
-            align-items: center;
-        }
-        label { font-size: 14px; font-weight: bold; width: 60px; display: inline-block;}
-        input[type="number"] {
-            width: 80px;
-            padding: 5px;
-            background: #fff;
-            border: none;
-            border-radius: 3px;
-            font-weight: bold;
-            color: #333;
-        }
-        .hint { font-size: 12px; color: #aaa; margin-top: 15px; margin-bottom: 10px; }
+
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg-dark); color: var(--text-light); margin: 0; padding: 0; display: flex; flex-direction: column; min-height: 100vh;}
         
-        /* Estilos de la Brújula */
-        .compass-box {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            margin-top: 15px;
-            background-color: var(--code-bg);
-            padding: 15px;
-            border-radius: 6px;
-            border: 1px solid var(--grid);
+        /* HEADER ESTILO DAYZ */
+        header { background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.9)), url('https://placehold.co/1200x200/121212/5c7b39?text=DAYZ+SPAWN+VISUALIZER') center/cover; padding: 20px; border-bottom: 3px solid var(--primary); text-align: center; }
+        header h1 { margin: 0; font-size: 28px; color: var(--accent); text-transform: uppercase; letter-spacing: 2px; text-shadow: 2px 2px 4px #000; }
+        
+        /* BARRA DE NAVEGACIÓN */
+        .nav-bar { background-color: #000; padding: 10px; text-align: center; border-bottom: 1px solid var(--border); }
+        .nav-bar a { color: var(--text-muted); text-decoration: none; font-weight: bold; margin: 0 15px; transition: 0.3s; font-size: 14px;}
+        .nav-bar a:hover, .nav-bar a.active { color: var(--primary); }
+
+        main { display: flex; gap: 20px; max-width: 1400px; width: 100%; margin: 20px auto; align-items: flex-start; padding: 0 20px; box-sizing: border-box; flexWrap: wrap;}
+        
+        @media (max-width: 1024px) {
+            main { flex-direction: column; }
+            .controls, .canvas-container { max-width: 100% !important; }
         }
-        .compass {
-            width: 70px;
-            height: 70px;
-            border: 2px solid var(--grid);
-            border-radius: 50%;
-            position: relative;
-            background: radial-gradient(circle, #16213e 0%, #0b0c10 100%);
-            box-shadow: inset 0 0 10px rgba(0,0,0,0.8);
-        }
-        .dir { position: absolute; font-size: 11px; font-weight: bold; color: #666; }
-        .dir-n { top: 4px; left: 50%; transform: translateX(-50%); color: var(--text-color); }
+
+        .controls { background-color: var(--bg-panel); border: 1px solid var(--border); padding: 20px; border-radius: 8px; flex: 1; max-width: 450px; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+        
+        .row-title { color: var(--primary); border-bottom: 1px solid var(--border); padding-bottom: 5px; margin-top: 20px; margin-bottom: 10px; font-size: 16px; text-transform: uppercase;}
+        
+        .point-group { background-color: var(--bg-slot); padding: 10px; margin-bottom: 10px; border-radius: 5px; border-left: 4px solid var(--secondary); }
+        .input-row { display: flex; gap: 10px; margin-top: 5px; align-items: center; }
+        
+        label { font-size: 13px; font-weight: bold; width: 60px; display: inline-block; color: var(--text-light);}
+        input[type="number"] { width: 80px; padding: 8px; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 3px; font-weight: bold; color: white; }
+        input[type="number"]:focus { outline: none; border-color: var(--primary); }
+        
+        .hint { font-size: 12px; color: var(--text-muted); margin-top: 15px; margin-bottom: 10px; }
+        
+        /* BRÚJULA ESTILO DAYZ */
+        .compass-box { display: flex; align-items: center; gap: 15px; margin-top: 15px; background-color: #0d110b; padding: 15px; border-radius: 6px; border: 1px solid #222; }
+        .compass { width: 70px; height: 70px; border: 2px solid var(--primary); border-radius: 50%; position: relative; background: radial-gradient(circle, #242922 0%, #121212 100%); box-shadow: inset 0 0 10px rgba(0,0,0,0.8); }
+        .dir { position: absolute; font-size: 11px; font-weight: bold; color: var(--text-muted); }
+        .dir-n { top: 4px; left: 50%; transform: translateX(-50%); color: var(--secondary); }
         .dir-s { bottom: 4px; left: 50%; transform: translateX(-50%); }
         .dir-e { top: 50%; right: 6px; transform: translateY(-50%); }
         .dir-w { top: 50%; left: 6px; transform: translateY(-50%); }
-        .compass-arrow {
-            position: absolute;
-            top: 12px; bottom: 12px; left: 50%;
-            width: 2px;
-            background: rgba(255,255,255,0.1);
-            transform-origin: center;
-            transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
-        }
-        .compass-arrow::before {
-            content: '';
-            position: absolute;
-            top: 0; left: -5px;
-            border-left: 6px solid transparent;
-            border-right: 6px solid transparent;
-            border-bottom: 12px solid var(--text-color);
-        }
-        .compass-guide {
-            font-size: 13px;
-            color: #aaa;
-            line-height: 1.5;
-        }
-        .compass-guide span { color: #fff; font-weight: bold; }
+        .compass-arrow { position: absolute; top: 12px; bottom: 12px; left: 50%; width: 2px; background: rgba(255,255,255,0.1); transform-origin: center; transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1); }
+        .compass-arrow::before { content: ''; position: absolute; top: 0; left: -5px; border-left: 6px solid transparent; border-right: 6px solid transparent; border-bottom: 12px solid var(--secondary); }
+        .compass-guide { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
+        .compass-guide span { color: var(--text-light); font-weight: bold; }
 
-        .event-example {
-            margin-top: 20px;
-            padding: 15px;
-            background-color: rgba(0,0,0,0.3);
-            border-radius: 6px;
-            border: 1px solid var(--grid);
-        }
-        .event-example h3 { margin-top: 0; font-size: 15px; color: var(--text-color); }
-        .event-example pre { margin: 0; font-size: 11px; white-space: pre-wrap; color: #a6e22e; }
+        .event-example { margin-top: 20px; padding: 15px; background-color: #0d110b; border-radius: 6px; border: 1px solid #222; }
+        .event-example h3 { margin-top: 0; font-size: 13px; color: var(--accent); text-transform: uppercase;}
+        .event-example pre { margin: 0; font-size: 11px; white-space: pre-wrap; color: #a6e22e; font-family: monospace;}
 
-        .canvas-container {
-            flex: 2;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-        canvas {
-            background-color: var(--code-bg);
-            border: 2px solid var(--grid);
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.5);
-            width: 100%;
-            height: 550px;
-        }
-        .results {
-            background-color: var(--panel-bg);
-            padding: 20px;
-            border-radius: 8px;
-        }
-        .status-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-bottom: 15px;
-        }
-        .distance-badge {
-            display: inline-block;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-weight: bold;
-            font-size: 13px;
-        }
-        pre {
-            background-color: var(--code-bg);
-            padding: 15px;
-            border-radius: 5px;
-            overflow-x: auto;
-            color: #4CAF50;
-            font-family: 'Courier New', Courier, monospace;
-            max-height: 200px;
-        }
+        /* CANVAS Y RESULTADOS */
+        .canvas-container { flex: 2; display: flex; flex-direction: column; gap: 15px; min-width: 320px;}
+        canvas { background-color: #0d110b; border: 2px solid var(--border); border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.5); width: 100%; height: 550px; }
         
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: var(--bg-color); }
-        ::-webkit-scrollbar-thumb { background: var(--grid); border-radius: 4px; }
+        .results { background-color: var(--bg-panel); border: 1px solid var(--border); padding: 20px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+        .results h3 { color: var(--primary); margin-top:0; font-size: 15px; text-transform: uppercase; border-bottom: 1px solid var(--border); padding-bottom: 5px;}
+        
+        .status-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 10px; margin-bottom: 15px; font-size: 13px;}
+        .distance-badge { display: inline-block; padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 12px; }
+        
+        pre#xmlOutput { background-color: #0d110b; padding: 15px; border-radius: 5px; overflow-x: auto; color: #a6e22e; font-family: monospace; font-size: 13px; border: 1px solid #222;}
+
+        footer { text-align: center; padding: 20px; color: #888; font-size: 13px; font-weight: bold; border-top: 1px solid #333; background-color: var(--bg-panel); letter-spacing: 1px; margin-top: auto;}
     </style>
 </head>
 <body>
-<div style="background-color: var(--bg-panel); padding: 10px 30px; border-bottom: 1px solid var(--border);">
-    <a href="index.html" style="color: var(--primary); text-decoration: none; margin-right: 20px; font-weight: bold;">🛠️ Creador de Loadouts</a>
-    <a href="spawn.html" style="color: var(--text-muted); text-decoration: none; font-weight: bold;">🚗 Visualizador de Spawns</a>
-    <a href="npc_maker.html" style="color: var(--text-muted); text-decoration: none; font-weight: bold;">🧍 Creador NPCs</a>
-</div>
-    <h1>Visualizador de Spawns</h1>
-    
-    <div class="container">
+
+    <header>
+        <h1>Visualizador de Spawns</h1>
+        <p style="margin:0; color:var(--text-muted); font-size:14px;">Herramienta geométrica para concesionarios y convoys</p>
+    </header>
+
+    <div class="nav-bar">
+        <a href="index.html">🛠️ Creador Loadouts</a>
+        <a href="spawn.html" class="active" style="color:var(--primary);">🚗 Spawns Autos</a>
+        <a href="npc_maker.html">🧍 Creador NPCs</a>
+        <a href="types_editor.html">📦 Types Editor</a>
+    </div>
+
+    <main>
         <div class="controls">
             <div class="point-group">
                 <label style="width: auto;">Ángulo Global (a):</label>
@@ -287,11 +190,11 @@
                 <h3>Análisis de Distancias de Seguridad</h3>
                 <div id="distanceStatus"></div>
                 
-                <h3>Código para cfgeventspawns.xml</h3>
+                <h3 style="margin-top: 15px;">Código para cfgeventspawns.xml</h3>
                 <pre id="xmlOutput"></pre>
             </div>
         </div>
-    </div>
+    </main>
 
     <script>
         const canvas = document.getElementById('mapCanvas');
@@ -335,7 +238,7 @@
         function drawCanvas(points, angle) {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
-            ctx.strokeStyle = 'rgba(15, 52, 96, 0.4)';
+            ctx.strokeStyle = 'rgba(49, 56, 43, 0.6)'; // Color del grid (--border)
             ctx.lineWidth = 1;
             for(let i = 0; i < canvas.width; i += PIXELS_PER_METER) {
                 ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, canvas.height); ctx.stroke();
@@ -354,7 +257,7 @@
                 cy: canvas.height / 2 - (z - centerZ) * PIXELS_PER_METER 
             });
 
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
             ctx.setLineDash([4, 4]);
             ctx.beginPath();
             
@@ -383,7 +286,8 @@
                 const rad = (angle - 90) * Math.PI / 180; 
                 ctx.rotate(rad);
 
-                ctx.fillStyle = index < 3 ? '#e94560' : '#4fa8c7'; 
+                // Colores adaptados al nuevo tema: Naranja y Verde Oliva
+                ctx.fillStyle = index < 3 ? '#c9510c' : '#5c7b39'; 
                 ctx.fillRect(- (CAR_LENGTH * PIXELS_PER_METER) / 2, - (CAR_WIDTH * PIXELS_PER_METER) / 2, CAR_LENGTH * PIXELS_PER_METER, CAR_WIDTH * PIXELS_PER_METER);
                 
                 ctx.fillStyle = '#fff';
@@ -405,12 +309,12 @@
 
             statusDiv.innerHTML = `
                 <div class="status-grid">
-                    <div>Fila 1 (Lado a Lado): Auto 1-2: ${formatDist(dists.d1_2)} | Auto 2-3: ${formatDist(dists.d2_3)}</div>
-                    <div>Fila 2 (Lado a Lado): Auto 4-5: ${formatDist(dists.d4_5)} | Auto 5-6: ${formatDist(dists.d5_6)}</div>
-                    <div>Atrás hacia Adelante: Auto 1-4: ${formatDist(dists.d1_4)} | Auto 2-5: ${formatDist(dists.d2_5)}</div>
-                    <div>Atrás hacia Adelante: Auto 3-6: ${formatDist(dists.d3_6)}</div>
+                    <div>Fila 1: A1-A2: ${formatDist(dists.d1_2)} | A2-A3: ${formatDist(dists.d2_3)}</div>
+                    <div>Fila 2: A4-A5: ${formatDist(dists.d4_5)} | A5-A6: ${formatDist(dists.d5_6)}</div>
+                    <div>Frente-Atrás: A1-A4: ${formatDist(dists.d1_4)} | A2-A5: ${formatDist(dists.d2_5)}</div>
+                    <div>Frente-Atrás: A3-A6: ${formatDist(dists.d3_6)}</div>
                 </div>
-                ${danger ? '<div style="color:var(--danger); font-weight:bold;">⚠️ Peligro: Detectamos distancias menores a 4.5m. Espacia más los autos.</div>' : '<div style="color:var(--safe); font-weight:bold;">✅ Estacionamiento seguro. Distancias correctas.</div>'}
+                ${danger ? '<div style="color:var(--danger); font-weight:bold; margin-top: 10px;">⚠️ Peligro: Detectamos distancias menores a 4.5m. Espacia más los autos.</div>' : '<div style="color:var(--safe); font-weight:bold; margin-top: 10px;">✅ Estacionamiento seguro. Distancias correctas.</div>'}
             `;
 
             let xml = `\n`;
@@ -422,7 +326,7 @@
 
         updateAll();
     </script>
-    <footer style="text-align: center; padding: 20px; color: #888; font-size: 13px; font-weight: bold; margin-top: 20px; border-top: 1px solid #333; background-color: #1a1e19; letter-spacing: 1px;">
+    <footer>
         Created by IMrLogan 💀 DayZ Tools
     </footer>
 </body>
