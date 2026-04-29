@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Creador de NPCs - DayZ Server</title>
+    <style>
+        :root {
+            --bg-dark: #121212; --bg-panel: #1a1e19; --bg-slot: #242922;
+            --primary: #5c7b39; --primary-hover: #6f9445; --secondary: #c9510c;
+            --danger: #9c2727; --text-light: #e0e0e0; --text-muted: #888;
+            --border: #31382b; --accent: #a3b88b;
+        }
+
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg-dark); color: var(--text-light); margin: 0; padding: 0; }
+        
+        /* HEADER ESTILO DAYZ */
+        header { background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.9)), url('https://placehold.co/1200x200/121212/5c7b39?text=DAYZ+NPC+CREATOR') center/cover; padding: 20px; border-bottom: 3px solid var(--primary); text-align: center; }
+        header h1 { margin: 0; font-size: 28px; color: var(--accent); text-transform: uppercase; letter-spacing: 2px; text-shadow: 2px 2px 4px #000; }
+        
+        /* BARRA DE NAVEGACIÓN */
+        .nav-bar { background-color: #000; padding: 10px; text-align: center; border-bottom: 1px solid var(--border); }
+        .nav-bar a { color: var(--text-muted); text-decoration: none; font-weight: bold; margin: 0 15px; transition: 0.3s; }
+        .nav-bar a:hover { color: var(--primary); }
+
+        main { display: flex; flex-wrap: wrap; gap: 20px; padding: 20px; max-width: 1400px; margin: auto; }
+        .panel { background-color: var(--bg-panel); border: 1px solid var(--border); border-radius: 6px; padding: 20px; flex: 1; min-width: 320px; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+        h2 { color: var(--primary); border-bottom: 1px solid var(--border); padding-bottom: 10px; margin-top: 0; font-size: 16px; text-transform: uppercase; }
+
+        /* CONTROLES Y FORMAS */
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; font-size: 12px; color: var(--accent); font-weight: bold; margin-bottom: 5px; text-transform: uppercase; }
+        input[type="text"], input[type="number"], select { width: 100%; padding: 10px; background-color: var(--bg-slot); border: 1px solid var(--border); color: white; border-radius: 4px; box-sizing: border-box; }
+        input:focus, select:focus { outline: none; border-color: var(--primary); }
+        
+        .row { display: flex; gap: 10px; }
+        .row > div { flex: 1; }
+
+        button { background-color: var(--primary); color: white; border: none; padding: 10px 20px; cursor: pointer; border-radius: 4px; font-weight: bold; text-transform: uppercase; transition: 0.3s; width: 100%; }
+        button:hover { background-color: var(--primary-hover); }
+        .btn-danger { background-color: var(--danger); }
+        .btn-danger:hover { background-color: #ba2f2f; }
+
+        /* ROPA Y EQUIPO */
+        .equip-grid { display: flex; flex-direction: column; gap: 10px; }
+        .equip-slot { display: flex; align-items: center; gap: 10px; background: var(--bg-slot); padding: 8px; border-radius: 4px; border-left: 3px solid var(--secondary); }
+        .slot-name { width: 70px; font-size: 11px; font-weight: bold; color: var(--text-muted); text-transform: uppercase; text-align: right; }
+        .item-thumb { width: 40px; height: 40px; background: #000; border-radius: 4px; object-fit: contain; border: 1px solid #333; }
+
+        /* CARGO */
+        .cargo-list { list-style: none; padding: 0; margin: 0; max-height: 300px; overflow-y: auto; }
+        .cargo-item { display: flex; align-items: center; justify-content: space-between; background: var(--bg-slot); padding: 8px; margin-bottom: 5px; border-radius: 4px; border-left: 3px solid var(--primary); }
+
+        /* PREVIEW CODE */
+        .code-box { background: #0d110b; padding: 15px; border-radius: 4px; border: 1px solid #222; color: #a6e22e; font-family: monospace; font-size: 12px; white-space: pre-wrap; word-break: break-all; height: 180px; overflow-y: auto; margin-bottom: 10px; }
+
+        /* MAPA */
+        .map-container { position: relative; padding-bottom: 56.25%; height: 0; border-radius: 6px; overflow: hidden; border: 1px solid var(--border); margin-top: 15px; }
+        .map-container iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; }
+
+        .db-status { font-size: 12px; text-align: center; margin-top: 10px; color: var(--text-muted); }
+    </style>
+</head>
+<body>
+
+    <datalist id="all-items"></datalist>
+
+    <header>
+        <h1>Generador de NPCs</h1>
+        <p style="margin:0; color:var(--text-muted); font-size:14px;">Crea guardias, comerciantes o decoraciones para tu servidor</p>
+        <div id="db-indicator" class="db-status">Base de datos items: <span style="color:var(--secondary)">Cargando types.xml...</span></div>
+    </header>
+
+    <div class="nav-bar">
+        <a href="index.html">🛠️ Creador Loadouts</a>
+        <a href="spawn.html">🚗 Spawns Autos</a>
+        <a href="npc_maker.html" style="color:var(--primary);">🧍 Creador NPCs</a>
+    </div>
+
+    <main>
+        <!-- COLUMNA 1: CONFIGURACIÓN BÁSICA Y UBICACIÓN -->
+        <div class="panel">
+            <h2>1. Configuración del Evento</h2>
+            
+            <div class="form-group">
+                <label>Nombre del Evento (ID Único)</label>
+                <input type="text" id="event-name" value="ItemGuard1" oninput="updateXML()">
+            </div>
+
+            <div class="form-group">
+                <label>Tipo de Superviviente (Modelo)</label>
+                <select id="npc-type" onchange="updateXML()">
+                    <optgroup label="Hombres">
+                        <option value="SurvivorM_Boris">SurvivorM_Boris</option>
+                        <option value="SurvivorM_Cyril">SurvivorM_Cyril</option>
+                        <option value="SurvivorM_Denis">SurvivorM_Denis</option>
+                        <option value="SurvivorM_Elias">SurvivorM_Elias</option>
+                        <option value="SurvivorM_Francis">SurvivorM_Francis</option>
+                        <option value="SurvivorM_Guo">SurvivorM_Guo</option>
+                        <option value="SurvivorM_Hassan">SurvivorM_Hassan</option>
+                        <option value="SurvivorM_Indar">SurvivorM_Indar</option>
+                        <option value="SurvivorM_Jose">SurvivorM_Jose</option>
+                        <option value="SurvivorM_Kaito">SurvivorM_Kaito</option>
+                        <option value="SurvivorM_Lewis">SurvivorM_Lewis</option>
+                        <option value="SurvivorM_Manua">SurvivorM_Manua</option>
+                        <option value="SurvivorM_Mirek">SurvivorM_Mirek</option>
+                        <option value="SurvivorM_Niki">SurvivorM_Niki</option>
+                        <option value="SurvivorM_Oliver">SurvivorM_Oliver</option>
+                        <option value="SurvivorM_Peter" selected>SurvivorM_Peter</option>
+                        <option value="SurvivorM_Quinn">SurvivorM_Quinn</option>
+                        <option value="SurvivorM_Rolf">SurvivorM_Rolf</option>
+                        <option value="SurvivorM_Seth">SurvivorM_Seth</option>
+                        <option value="SurvivorM_Taiki">SurvivorM_Taiki</option>
+                    </optgroup>
+                    <optgroup label="Mujeres">
+                        <option value="SurvivorF_Baty">SurvivorF_Baty</option>
+                        <option value="SurvivorF_Eva">SurvivorF_Eva</option>
+                        <option value="SurvivorF_Frida">SurvivorF_Frida</option>
+                        <option value="SurvivorF_Gabi">SurvivorF_Gabi</option>
+                        <option value="SurvivorF_Helga">SurvivorF_Helga</option>
+                        <option value="SurvivorF_Irena">SurvivorF_Irena</option>
+                        <option value="SurvivorF_Judy">SurvivorF_Judy</option>
+                        <option value="SurvivorF_Keiko">SurvivorF_Keiko</option>
+                        <option value="SurvivorF_Linda">SurvivorF_Linda</option>
+                        <option value="SurvivorF_Maria">SurvivorF_Maria</option>
+                        <option value="SurvivorF_Naomi">SurvivorF_Naomi</option>
+                    </optgroup>
+                </select>
+            </div>
+
+            <h2>2. Ubicación Exacta</h2>
+            <p style="font-size:11px; color:var(--text-muted); margin-top:0;">Usa el mapa de abajo para guiarte. Ingresa las coordenadas manualmente.</p>
+            <div class="row">
+                <div class="form-group">
+                    <label>Eje X</label>
+                    <input type="number" id="pos-x" value="0.0" step="0.1" oninput="updateXML()">
+                </div>
+                <div class="form-group">
+                    <label>Eje Z (Y en el mapa)</label>
+                    <input type="number" id="pos-z" value="0.0" step="0.1" oninput="updateXML()">
+                </div>
+                <div class="form-group">
+                    <label>Ángulo (A)</label>
+                    <input type="number" id="pos-a" value="0.0" step="0.1" oninput="updateXML()">
+                </div>
+            </div>
+
+            <div class="map-container">
+                <iframe src="https://www.izurvive.com/chernarusplussatmap/"></iframe>
+            </div>
+        </div>
+
+        <!-- COLUMNA 2: ROPA Y CARGO -->
+        <div class="panel">
+            <h2>3. Vestimenta y Equipo Principal</h2>
+            <div class="equip-grid" id="equip-form">
+                <!-- Se inyecta con JS -->
+            </div>
+
+            <h2 style="margin-top: 20px;">4. Inventario Libre (Cargo)</h2>
+            <div class="row" style="margin-bottom: 10px;">
+                <input type="text" id="new-cargo-item" list="all-items" placeholder="Ej: Hatchet, Nails...">
+                <button onclick="addCargo()" style="width: auto;">Añadir</button>
+            </div>
+            <ul class="cargo-list" id="cargo-list"></ul>
+        </div>
+
+        <!-- COLUMNA 3: EXPORTACIÓN -->
+        <div class="panel">
+            <h2>Archivos Generados</h2>
+            <p style="font-size: 11px; color: var(--text-muted);">El sistema formatea los códigos listos para pegar en tus archivos XML del servidor.</p>
+            
+            <label style="font-size:12px; color:var(--primary); font-weight:bold;">📝 events.xml</label>
+            <div class="code-box" id="code-events"></div>
+
+            <label style="font-size:12px; color:var(--primary); font-weight:bold;">📍 cfgeventspawns.xml</label>
+            <div class="code-box" id="code-spawns"></div>
+
+            <label style="font-size:12px; color:var(--primary); font-weight:bold;">🎒 cfgspawnabletypes.xml</label>
+            <div class="code-box" id="code-types"></div>
+
+            <button onclick="downloadNPC()" style="padding: 15px; font-size: 16px; margin-top: 15px;">📥 Descargar Instrucciones (TXT)</button>
+        </div>
+    </main>
+
+    <script>
+        // Configuración de imágenes
+        const imgBase = "images/";
+        function getImgUrl(name) { return name ? `${imgBase}${name}.png` : 'https://placehold.co/40x40/2b2b2b/5c7b39?text=?'; }
+        function getFallback(name) { return `https://placehold.co/40x40/222/555?text=${name ? name[0].toUpperCase() : '?'}`; }
+
+        // Lector Automático de types.xml
+        fetch('types.xml').then(r => r.text()).then(xml => {
+            const parser = new DOMParser();
+            const types = parser.parseFromString(xml, "application/xml").getElementsByTagName('type');
+            const datalist = document.getElementById('all-items');
+            let fragment = document.createDocumentFragment();
+            for (let i = 0; i < types.length; i++) {
+                let name = types[i].getAttribute('name');
+                if(name) {
+                    let opt = document.createElement('option'); opt.value = name; fragment.appendChild(opt);
+                }
+            }
+            datalist.appendChild(fragment);
+            document.getElementById('db-indicator').innerHTML = `Base de datos items: <span style="color:var(--primary)">Cargada (Auto)</span>`;
+        }).catch(() => {
+            document.getElementById('db-indicator').innerHTML = `Base de datos items: <span style="color:var(--danger)">No se encontró types.xml</span>`;
+        });
+
+        // Configuración de Vestimenta
+        const equipSlots = [
+            { id: 'Head', label: 'Cabeza', def: 'ConstructionHelmet_Yellow' },
+            { id: 'Body', label: 'Torso', def: 'Shirt_RedCheck' },
+            { id: 'Legs', label: 'Piernas', def: 'Jeans_Blue' },
+            { id: 'Vest', label: 'Chaleco', def: 'ReflexVest' },
+            { id: 'Feet', label: 'Pies', def: 'WorkingBoots_Beige' },
+            { id: 'Gloves', label: 'Guantes', def: 'WorkingGloves_Yellow' },
+            { id: 'Back', label: 'Mochila', def: 'AliceBag_Green' }
+        ];
+
+        function renderEquip() {
+            const container = document.getElementById('equip-form');
+            container.innerHTML = '';
+            equipSlots.forEach(s => {
+                container.innerHTML += `
+                    <div class="equip-slot">
+                        <div class="slot-name">${s.label}</div>
+                        <img id="img-${s.id}" class="item-thumb" src="${getImgUrl(s.def)}" onerror="this.src='${getFallback(s.def)}'">
+                        <input type="text" id="${s.id}" value="${s.def}" list="all-items" style="flex:1;" oninput="updateSlot('${s.id}')">
+                    </div>
+                `;
+            });
+            updateXML();
+        }
+
+        function updateSlot(id) {
+            const val = document.getElementById(id).value;
+            equipSlots.find(s => s.id === id).def = val;
+            document.getElementById(`img-${id}`).src = getImgUrl(val);
+            updateXML();
+        }
+
+        // Inventario Cargo
+        let cargoItems = ["MetalPlate", "Hatchet", "HandSaw"];
+
+        function renderCargo() {
+            const list = document.getElementById('cargo-list');
+            list.innerHTML = '';
+            cargoItems.forEach((item, index) => {
+                list.innerHTML += `
+                    <li class="cargo-item">
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            <img src="${getImgUrl(item)}" class="item-thumb" onerror="this.src='${getFallback(item)}'">
+                            <span>${item}</span>
+                        </div>
+                        <button class="btn-danger" style="width:auto; padding:5px 10px;" onclick="removeCargo(${index})">X</button>
+                    </li>
+                `;
+            });
+            updateXML();
+        }
+
+        function addCargo() {
+            const input = document.getElementById('new-cargo-item');
+            if(input.value.trim() !== '') {
+                cargoItems.push(input.value.trim());
+                input.value = '';
+                renderCargo();
+            }
+        }
+        function removeCargo(index) { cargoItems.splice(index, 1); renderCargo(); }
+        document.getElementById('new-cargo-item').addEventListener('keypress', function(e) { if(e.key === 'Enter') addCargo(); });
+
+        // Generador de XML
+        function updateXML() {
+            const evtName = document.getElementById('event-name').value || "UnknownEvent";
+            const npcType = document.getElementById('npc-type').value;
+            const posX = document.getElementById('pos-x').value || "0.0";
+            const posZ = document.getElementById('pos-z').value || "0.0";
+            const posA = document.getElementById('pos-a').value || "0.0";
+
+            // 1. EVENTS.XML
+            const eventsXml = `<event name="${evtName}">
+    <nominal>1</nominal>
+    <min>1</min>
+    <max>1</max>
+    <lifetime>2500</lifetime>
+    <restock>0</restock>
+    <saferadius>0</saferadius>
+    <distanceradius>0</distanceradius>
+    <cleanupradius>200</cleanupradius>
+    <flags deletable="0" init_random="0" remove_damaged="1"/>
+    <position>fixed</position>
+    <limit>child</limit>
+    <active>1</active>
+    <children>
+        <child lootmax="0" lootmin="0" max="1" min="1" type="${npcType}"/>
+    </children>
+</event>`;
+
+            // 2. CFGEVENTSPAWNS.XML
+            const spawnsXml = `<event name="${evtName}">
+    <pos x="${posX}" z="${posZ}" a="${posA}" />
+</event>`;
+
+            // 3. CFGSPAWNABLETYPES.XML
+            let attachmentsXML = "";
+            
+            // Sumar ropa
+            equipSlots.forEach(s => {
+                if(s.def) attachmentsXML += `    <attachments>\n        <item name="${s.def}" />\n    </attachments>\n`;
+            });
+            
+            // Sumar cargo
+            cargoItems.forEach(item => {
+                attachmentsXML += `    <attachments>\n        <item name="${item}" />\n    </attachments>\n`;
+            });
+
+            const typesXml = `<type name="${npcType}">\n${attachmentsXML}</type>`;
+
+            // Imprimir en pantalla
+            document.getElementById('code-events').textContent = eventsXml;
+            document.getElementById('code-spawns').textContent = spawnsXml;
+            document.getElementById('code-types').textContent = typesXml;
+        }
+
+        // Función de Descarga
+        function downloadNPC() {
+            const evtName = document.getElementById('event-name').value || "NPC";
+            const eventsContent = document.getElementById('code-events').textContent;
+            const spawnsContent = document.getElementById('code-spawns').textContent;
+            const typesContent = document.getElementById('code-types').textContent;
+
+            const finalFileContent = `=== INSTRUCCIONES PARA INSTALAR TU NPC ===\n\n1. Pega este código dentro de tu archivo events.xml (asegúrate de que esté antes de la etiqueta de cierre </events>):\n\n${eventsContent}\n\n==============================================\n\n2. Pega este código dentro de tu archivo cfgeventspawns.xml:\n\n${spawnsContent}\n\n==============================================\n\n3. Pega este código dentro de tu archivo cfgspawnabletypes.xml:\n\n${typesContent}`;
+
+            const blob = new Blob([finalFileContent], { type: "text/plain" });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = `Instrucciones_${evtName}.txt`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // Inicializar
+        renderEquip();
+        renderCargo();
+    </script>
+    <footer style="text-align: center; padding: 20px; color: #888; font-size: 13px; font-weight: bold; margin-top: 20px; border-top: 1px solid #333; background-color: #1a1e19; letter-spacing: 1px;">
+        Created by IMrLogan 💀 DayZ Tools
+    </footer>
+</body>
+</html>
